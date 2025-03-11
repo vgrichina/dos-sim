@@ -12,13 +12,25 @@
 90 ' Check if it's a generative prompt
 100 IF INSTR(CMD$, ".BAS") > 0 THEN GOTO 300
 110 ' Otherwise, it's a standard DOS command
+115 PRINT "DOS-EXEC: Attempting to execute '"; CMD$; "'"
+116 ON ERROR GOTO 2000
 120 SHELL CMD$
+125 ON ERROR GOTO 0
+126 PRINT "DOS-EXEC: Command executed"
 130 GOTO 60
 
+2000 ' Error handler for SHELL command
+2005 A = ERR : B = ERL
+2010 PRINT "DOS-ERROR: Error"; A; "at line"; B; "while executing '"; CMD$; "'"
+2015 RESUME 130
+
 300 ' Handle BASIC file generation
+305 PRINT "GEN-CMD: Sending generation command"
 310 OPEN "CMD_OUT.TXT" FOR OUTPUT AS #1
 320 PRINT #1, "GENERATE:" + CMD$
 330 CLOSE #1
+335 PRINT "GEN-CMD: Generation command sent, going to polling loop"
+340 GOTO 400 ' Go to polling loop after sending the command
 
 400 ' Polling loop for cmd_in.txt
 405 PRINT "POLLING: Starting loop"
