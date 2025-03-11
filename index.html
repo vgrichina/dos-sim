@@ -16,38 +16,10 @@
       margin: 0 auto;
     }
     #dos-container {
-      width: 640px;
-      height: 400px;
+      width: 800px;
+      height: 600px;
       margin: 0 auto;
       border: 2px solid #444;
-    }
-    .terminal {
-      background: black;
-      color: #00FF00;
-      font-family: "Courier New", monospace;
-      padding: 10px;
-      margin-top: 20px;
-      border: 2px solid #444;
-    }
-    .prompt {
-      position: relative;
-      display: block;
-      width: 100%;
-      background: black;
-      border: none;
-      color: #00FF00;
-      font-family: "Courier New", monospace;
-      font-size: 16px;
-      outline: none;
-      padding: 5px 0 5px 40px;
-      box-sizing: border-box;
-    }
-    .prompt::before {
-      content: "C:\\>";
-      color: white;
-      position: absolute;
-      left: 5px;
-      top: 5px;
     }
     h1 {
       text-align: center;
@@ -72,15 +44,15 @@
   <div class="container">
     <h1>DOSSim</h1>
     <div id="dos-container"></div>
-    <div class="terminal">
-      <input id="terminal-input" class="prompt" type="text" autofocus />
-    </div>
     <footer>
       <p>DOSSim &copy; 2025 | <a href="https://github.com/vgrichina/dos-sim" target="_blank">GitHub</a> | <a href="https://js-dos.com" target="_blank">js-dos</a></p>
     </footer>
   </div>
 
-  <script src="https://js-dos.com/cdn/js-dos.js"></script>
+  <!-- js-dos style sheet -->
+  <link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
+  <!-- js-dos -->
+  <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <script src="js/config.js"></script>
   <script src="js/utilities.js"></script>
   <script src="js/api-service.js"></script>

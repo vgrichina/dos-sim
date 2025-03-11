@@ -10,8 +10,8 @@ const DOSSimConfig = {
   jsDos: {
     wasm: true,
     cycles: "max",
-    // URL to the GW-BASIC bundle
-    gwBasicUrl: "https://cdn.dos.zone/original/2X/2/24b00b14f118815e70c27306d21a3c5f80c90fe4.jsdos"
+    // Local path to GWBASIC.EXE
+    gwBasicPath: "disk/GWBASIC.EXE"
   },
   
   // Initial virtual filesystem
