@@ -64,56 +64,68 @@ let virtualFiles = DOSSimConfig.virtualFs.initialFiles.slice(); // Copy of initi
 
 // Use AI clients from api-service.js
 
+// Clean up DOSBox when we're done
+async function cleanupDosBox() {
+  if (commandInterface) {
+    try {
+      console.log("Shutting down DOSBox...");
+      await commandInterface.exit();
+      commandInterface = null;
+      console.log("DOSBox shutdown complete");
+    } catch (error) {
+      console.error("Error shutting down DOSBox:", error);
+    }
+  }
+}
+
 // Initialize js-dos when DOM is ready
 document.addEventListener("DOMContentLoaded", async () => {
   const aiClient = AIClientFactory.createClient(DOSSimConfig.ai);
   
   try {
     console.log("Initializing js-dos...");
-    // Initialize emulator using js-dos v8 API
-    const emulatorsElement = document.getElementById("dos-container");
-    const dosboxElement = document.createElement("div");
-    emulatorsElement.appendChild(dosboxElement);
-    
-    // Create a new js-dos instance with configuration
-    const dosbox = await Dos(dosboxElement, {
-      wasm: DOSSimConfig.jsDos.wasm,
-      cycles: DOSSimConfig.jsDos.cycles,
-      dosboxConf: {
-        "cpu": "auto",
-        "cycles": "max",
-        "sbtype": "none",
-        "gus": "false",
-        "fullscreen": "false",
-        "autolock": "false"
-      },
-      initFs: {
-        "/README.TXT": DOSSimConfig.virtualFs.readmeContent
-      }
-    });
-    
     // Fetch the GWBASIC.EXE file
     console.log("Fetching GWBASIC.EXE...");
     const response = await fetch("disk/GWBASIC.EXE");
     const gwbasicBinary = await response.arrayBuffer();
     
-    // Create an empty disk
-    console.log("Creating disk image...");
-    commandInterface = await dosbox.fs();
+    // Initialize emulator using js-dos v8 API with enhanced configuration
+    console.log("Creating js-dos emulator with files...");
+    // First clear the container and add a dedicated element for js-dos
+    const container = document.getElementById("dos-container");
+    container.innerHTML = '<div class="jsdos-rso"></div>';
     
-    // Write GWBASIC.EXE and CMD.BAS to the disk
-    await commandInterface.writeFile("GWBASIC.EXE", new Uint8Array(gwbasicBinary));
-    await commandInterface.writeFile("CMD.BAS", CMD_BAS);
-    await commandInterface.writeFile("README.TXT", DOSSimConfig.virtualFs.readmeContent);
+    // Create file list for initialization
+    const files = [
+      { path: "GWBASIC.EXE", contents: new Uint8Array(gwbasicBinary) },
+      { path: "CMD.BAS", contents: new TextEncoder().encode(CMD_BAS) },
+      { path: "README.TXT", contents: new TextEncoder().encode(DOSSimConfig.virtualFs.readmeContent) }
+    ];
     
-    // Execute GWBASIC with CMD.BAS
-    console.log("Starting GW-BASIC...");
-    await dosbox.shell(["GWBASIC.EXE", "CMD.BAS"]);
+    // Initialize following the example's approach
+    commandInterface = await Dos(document.querySelector(".jsdos-rso"), {
+      wdosboxUrl: "https://v8.js-dos.com/latest/wdosbox.js",
+      dosboxConf: `
+        [autoexec]
+        mount c .
+        c:
+        GWBASIC.EXE CMD.BAS
+        
+        [cpu]
+        cputype pentium_mmx
+        cycles=auto 150000 50% limit 250000
+      `,
+      initFs: files,
+      backend: 'dosboxX',
+      autoStart: true,
+      noCloud: true
+    });
     
-    // Set up polling for CMD output
+    // Set up polling for CMD output once DOSBox is ready
+    console.log("DOSSim environment ready!");
     pollCmdOutput();
     
-    console.log("DOSSim initialized successfully!");
+    console.log("DOSSim initialization in progress...");
   } catch (error) {
     console.error("Error initializing DOSSim:", error);
   }
@@ -121,27 +133,43 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Poll for CMD output at specified interval
 async function pollCmdOutput() {
-  setInterval(async () => {
+  const pollInterval = setInterval(async () => {
     try {
-      // Directly try to read the file and handle errors
-      const outputBuffer = await commandInterface.fsReadFile("cmd_out.txt");
+      // Check if commandInterface is still available
+      if (!commandInterface) {
+        console.log("DOSBox interface not available, stopping polling");
+        clearInterval(pollInterval);
+        return;
+      }
+      
+      // Directly read the file using fsReadFile
+      let outputBuffer;
+      try {
+        outputBuffer = await commandInterface.readFile("cmd_out.txt");
+      } catch (readError) {
+        // File probably doesn't exist yet, which is normal
+        return;
+      }
+      
       const output = new TextDecoder().decode(outputBuffer);
       console.log("Received command output:", output);
       
       // Remove the file to avoid processing it again
-      await commandInterface.fsDeleteFile("cmd_out.txt");
+      try {
+        await commandInterface.deleteFile("cmd_out.txt");
+      } catch (deleteError) {
+        console.warn("Could not delete cmd_out.txt:", deleteError.message);
+      }
       
       // Handle the command
       await handleCmdOutput(output);
     } catch (error) {
-      // File probably doesn't exist yet, which is normal
-      // Only log unexpected errors
-      if (error.message && !error.message.includes("not found") && 
-          !error.message.includes("not exist") && !error.message.includes("No such")) {
-        console.error("Error in polling CMD output:", error);
-      }
+      // General error in polling function
+      console.error("Error in polling CMD output:", error);
     }
   }, DOSSimConfig.system.pollingInterval);
+  
+  return pollInterval;
 }
 
 // Handle commands from CMD
@@ -158,12 +186,18 @@ async function handleCmdOutput(output) {
     if (output.startsWith("GENERATE:")) {
       console.log("Processing GENERATE command");
       await handleGenerateRequest(output.slice(9));
+    } else {
+      console.warn("Unknown command received:", output);
     }
   } catch (error) {
     console.error("Error handling CMD output:", error);
     // Write error to cmd_in.txt
-    const errorMsg = "Error: " + error.message;
-    await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+    try {
+      const errorMsg = "Error: " + error.message;
+      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+    } catch (writeError) {
+      console.error("Failed to write error message:", writeError);
+    }
   }
 }
 
@@ -185,7 +219,11 @@ async function handleGenerateRequest(prompt) {
     for await (const chunk of stream) {
       currentContent = chunk;
       // Write current content to cmd_in.txt for streaming display
-      await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(currentContent));
+      try {
+        await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(currentContent));
+      } catch (writeError) {
+        console.warn("Error writing to cmd_in.txt:", writeError.message);
+      }
     }
     
     // Add the file to our virtual FS tracking
@@ -194,14 +232,24 @@ async function handleGenerateRequest(prompt) {
     }
     
     // Write the complete file
-    await commandInterface.fsWriteFile(filename, new TextEncoder().encode(currentContent));
-    
-    // Send command to run the file
-    await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode("RUN:" + filename));
+    try {
+      await commandInterface.writeFile(filename, new TextEncoder().encode(currentContent));
+      console.log(`File ${filename} created successfully`);
+      
+      // Send command to run the file
+      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode("RUN:" + filename));
+    } catch (fileError) {
+      console.error(`Error writing ${filename}:`, fileError);
+      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(`Error creating ${filename}: ${fileError.message}`));
+    }
   } catch (error) {
     console.error("Error generating code:", error);
     const errorMsg = "Error generating code: " + error.message;
-    await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+    try {
+      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+    } catch (e) {
+      console.error("Failed to write error message:", e);
+    }
   }
 }
 
