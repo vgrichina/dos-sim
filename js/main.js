@@ -37,16 +37,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Initializing js-dos...");
     // Fetch the required files
     console.log("Fetching required files...");
-    const [gwbasicResponse, cmdBasResponse] = await Promise.all([
+    
+    // Define file paths
+    const basFiles = ["CMD.BAS", "TEST.BAS"]; // List of BAS files to include
+    const fetchPromises = [
       fetch("disk/GWBASIC.EXE"),
-      fetch("disk/CMD.BAS")
-    ]);
+      ...basFiles.map(file => fetch(`disk/${file}`).catch(err => {
+        console.warn(`Could not load ${file}:`, err);
+        return null; // Return null for failed requests
+      }))
+    ];
     
+    // Fetch all files
+    const responses = await Promise.all(fetchPromises);
+    const gwbasicResponse = responses[0];
+    const basResponses = responses.slice(1).filter(Boolean); // Filter out failed fetches
+    
+    // Process the responses
     const gwbasicBinary = await gwbasicResponse.arrayBuffer();
-    const cmdBasText = await cmdBasResponse.text();
-    
-    // Convert to DOS line endings (CRLF)
-    const cmdBasWithCRLF = cmdBasText.replace(/\n/g, "\r\n");
+    const basContents = await Promise.all(
+      basResponses.map(async (response, index) => {
+        if (!response) return null;
+        const text = await response.text();
+        return {
+          path: basFiles[index],
+          content: text.replace(/\n/g, "\r\n") // Convert to DOS line endings (CRLF)
+        };
+      })
+    );
     
     // Initialize emulator using js-dos v8 API with enhanced configuration
     console.log("Creating js-dos emulator with files...");
@@ -57,9 +75,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Create file list for initialization
     const files = [
       { path: "GWBASIC.EXE", contents: new Uint8Array(gwbasicBinary) },
-      { path: "CMD.BAS", contents: new TextEncoder().encode(cmdBasWithCRLF) },
+      ...basContents.filter(Boolean).map(file => ({ 
+        path: file.path, 
+        contents: new TextEncoder().encode(file.content) 
+      })),
       { path: "README.TXT", contents: new TextEncoder().encode(DOSSimConfig.virtualFs.readmeContent.replace(/\n/g, "\r\n")) }
     ];
+    
+    console.log("Initialized files:", files.map(f => f.path));
     
     // Initialize with auto-launching CMD.BAS
     const options = {
