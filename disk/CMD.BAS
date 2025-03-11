@@ -4,25 +4,45 @@
 40 PRINT "Example: MARIO.BAS /no-koopas /play-as-princess"
 50 PRINT
 60 PRINT "C:\>";
+65 PRINT "CMD-READ: Waiting for command input..."
 70 LINE INPUT CMD$
-71 ' Convert to uppercase manually
-72 GOSUB 3000 ' Go to uppercase conversion subroutine
-75 PRINT "DEBUG: Command is '"; CMD$; "', LEN="; LEN(CMD$)
-80 IF CMD$ = "EXIT" THEN PRINT "Exiting DOSSim..." : SYSTEM
-90 ' Check if it's a generative prompt
+71 PRINT "CMD-READ: Raw command received: ["; CMD$; "]"
+72 PRINT "CMD-READ: Command length: "; LEN(CMD$)
+73 PRINT "CMD-READ: ASCII codes: ";
+74 FOR I = 1 TO LEN(CMD$)
+75   PRINT ASC(MID$(CMD$, I, 1)); " ";
+76 NEXT I
+77 PRINT
+78 ' Convert to uppercase manually
+79 GOSUB 3000 ' Go to uppercase conversion subroutine
+80 PRINT "DEBUG: Command after uppercase is '"; CMD$; "', LEN="; LEN(CMD$)
+85 IF CMD$ = "" THEN PRINT "CMD-READ: Empty command detected": GOTO 60
+90 IF CMD$ = "EXIT" THEN PRINT "Exiting DOSSim..." : SYSTEM
+95 ' Check if it's a generative prompt
 100 IF INSTR(CMD$, ".BAS") > 0 THEN GOTO 300
+105 ' Is it a TEST command?
+106 IF CMD$ = "TEST" THEN PRINT "CMD-READ: Test command detected": GOTO 60
 110 ' Otherwise, it's a standard DOS command
 115 PRINT "DOS-EXEC: Attempting to execute '"; CMD$; "'"
 116 ON ERROR GOTO 2000
+117 PRINT "DOS-EXEC: Using SHELL command now..."
 120 SHELL CMD$
 125 ON ERROR GOTO 0
-126 PRINT "DOS-EXEC: Command executed"
+126 PRINT "DOS-EXEC: Command executed successfully"
 130 GOTO 60
 
 2000 ' Error handler for SHELL command
 2005 A = ERR : B = ERL
 2010 PRINT "DOS-ERROR: Error"; A; "at line"; B; "while executing '"; CMD$; "'"
-2015 RESUME 130
+2020 ' Display specific error messages based on error code
+2030 IF A = 53 THEN PRINT "DOS-ERROR: File not found"
+2040 IF A = 52 THEN PRINT "DOS-ERROR: Bad filename or number"
+2050 IF A = 71 THEN PRINT "DOS-ERROR: Disk not ready"
+2060 IF A = 76 THEN PRINT "DOS-ERROR: Path not found"
+2070 IF A = 5 THEN PRINT "DOS-ERROR: Illegal function call"
+2080 IF A = 2 THEN PRINT "DOS-ERROR: Syntax error"
+2090 PRINT "DOS-ERROR: Returning to command prompt"
+2095 RESUME 130
 
 300 ' Handle BASIC file generation
 305 PRINT "GEN-CMD: Sending generation command"
