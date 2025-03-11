@@ -58,7 +58,7 @@ const CMD_BAS = `10 CLS
 `;
 
 // Global variables
-let ci; // CommandInterface from js-dos
+let commandInterface; // CommandInterface from js-dos
 let lastQueryTime = 0; // Prevent spam
 let virtualFiles = DOSSimConfig.virtualFs.initialFiles.slice(); // Copy of initial files in our virtual FS
 
@@ -99,12 +99,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Create an empty disk
     console.log("Creating disk image...");
-    ci = await dosbox.fs();
+    commandInterface = await dosbox.fs();
     
     // Write GWBASIC.EXE and CMD.BAS to the disk
-    await ci.writeFile("GWBASIC.EXE", new Uint8Array(gwbasicBinary));
-    await ci.writeFile("CMD.BAS", CMD_BAS);
-    await ci.writeFile("README.TXT", DOSSimConfig.virtualFs.readmeContent);
+    await commandInterface.writeFile("GWBASIC.EXE", new Uint8Array(gwbasicBinary));
+    await commandInterface.writeFile("CMD.BAS", CMD_BAS);
+    await commandInterface.writeFile("README.TXT", DOSSimConfig.virtualFs.readmeContent);
     
     // Execute GWBASIC with CMD.BAS
     console.log("Starting GW-BASIC...");
@@ -124,12 +124,12 @@ async function pollCmdOutput() {
   setInterval(async () => {
     try {
       // Directly try to read the file and handle errors
-      const outputBuffer = await ci.fsReadFile("cmd_out.txt");
+      const outputBuffer = await commandInterface.fsReadFile("cmd_out.txt");
       const output = new TextDecoder().decode(outputBuffer);
       console.log("Received command output:", output);
       
       // Remove the file to avoid processing it again
-      await ci.fsDeleteFile("cmd_out.txt");
+      await commandInterface.fsDeleteFile("cmd_out.txt");
       
       // Handle the command
       await handleCmdOutput(output);
@@ -163,7 +163,7 @@ async function handleCmdOutput(output) {
     console.error("Error handling CMD output:", error);
     // Write error to cmd_in.txt
     const errorMsg = "Error: " + error.message;
-    await ci.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+    await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
   }
 }
 
@@ -185,7 +185,7 @@ async function handleGenerateRequest(prompt) {
     for await (const chunk of stream) {
       currentContent = chunk;
       // Write current content to cmd_in.txt for streaming display
-      await ci.fsWriteFile("cmd_in.txt", new TextEncoder().encode(currentContent));
+      await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(currentContent));
     }
     
     // Add the file to our virtual FS tracking
@@ -194,14 +194,14 @@ async function handleGenerateRequest(prompt) {
     }
     
     // Write the complete file
-    await ci.fsWriteFile(filename, new TextEncoder().encode(currentContent));
+    await commandInterface.fsWriteFile(filename, new TextEncoder().encode(currentContent));
     
     // Send command to run the file
-    await ci.fsWriteFile("cmd_in.txt", new TextEncoder().encode("RUN:" + filename));
+    await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode("RUN:" + filename));
   } catch (error) {
     console.error("Error generating code:", error);
     const errorMsg = "Error generating code: " + error.message;
-    await ci.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+    await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
   }
 }
 
