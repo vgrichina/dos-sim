@@ -44,7 +44,7 @@ const DOSSimConfig = {
   
   // System settings
   system: {
-    pollingInterval: 100, // ms
+    pollingInterval: 500, // ms (increased from 100ms to 500ms)
     rateLimitInterval: 1000 // ms between commands
   }
 };
