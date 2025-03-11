@@ -145,7 +145,7 @@ async function pollCmdOutput() {
       // Directly read the file using fsReadFile
       let outputBuffer;
       try {
-        outputBuffer = await commandInterface.readFile("cmd_out.txt");
+        outputBuffer = await commandInterface.fsReadFile("cmd_out.txt");
       } catch (readError) {
         // File probably doesn't exist yet, which is normal
         return;
@@ -156,7 +156,7 @@ async function pollCmdOutput() {
       
       // Remove the file to avoid processing it again
       try {
-        await commandInterface.deleteFile("cmd_out.txt");
+        await commandInterface.fsDeleteFile("cmd_out.txt");
       } catch (deleteError) {
         console.warn("Could not delete cmd_out.txt:", deleteError.message);
       }
@@ -194,7 +194,7 @@ async function handleCmdOutput(output) {
     // Write error to cmd_in.txt
     try {
       const errorMsg = "Error: " + error.message;
-      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+      await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
     } catch (writeError) {
       console.error("Failed to write error message:", writeError);
     }
@@ -220,7 +220,7 @@ async function handleGenerateRequest(prompt) {
       currentContent = chunk;
       // Write current content to cmd_in.txt for streaming display
       try {
-        await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(currentContent));
+        await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(currentContent));
       } catch (writeError) {
         console.warn("Error writing to cmd_in.txt:", writeError.message);
       }
@@ -233,20 +233,20 @@ async function handleGenerateRequest(prompt) {
     
     // Write the complete file
     try {
-      await commandInterface.writeFile(filename, new TextEncoder().encode(currentContent));
+      await commandInterface.fsWriteFile(filename, new TextEncoder().encode(currentContent));
       console.log(`File ${filename} created successfully`);
       
       // Send command to run the file
-      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode("RUN:" + filename));
+      await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode("RUN:" + filename));
     } catch (fileError) {
       console.error(`Error writing ${filename}:`, fileError);
-      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(`Error creating ${filename}: ${fileError.message}`));
+      await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(`Error creating ${filename}: ${fileError.message}`));
     }
   } catch (error) {
     console.error("Error generating code:", error);
     const errorMsg = "Error generating code: " + error.message;
     try {
-      await commandInterface.writeFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
+      await commandInterface.fsWriteFile("cmd_in.txt", new TextEncoder().encode(errorMsg));
     } catch (e) {
       console.error("Failed to write error message:", e);
     }
