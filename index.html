@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DOSSim - DOS Experience in the Browser</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💾</text></svg>">
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background-color: #1a1a1a;
+      margin: 0;
+      padding: 20px;
+      color: #00ff00;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    #dos-container {
+      width: 640px;
+      height: 400px;
+      margin: 0 auto;
+      border: 2px solid #444;
+    }
+    .terminal {
+      background: black;
+      color: #00FF00;
+      font-family: "Courier New", monospace;
+      padding: 10px;
+      margin-top: 20px;
+      border: 2px solid #444;
+    }
+    .prompt {
+      position: relative;
+      display: block;
+      width: 100%;
+      background: black;
+      border: none;
+      color: #00FF00;
+      font-family: "Courier New", monospace;
+      font-size: 16px;
+      outline: none;
+      padding: 5px 0 5px 40px;
+      box-sizing: border-box;
+    }
+    .prompt::before {
+      content: "C:\\>";
+      color: white;
+      position: absolute;
+      left: 5px;
+      top: 5px;
+    }
+    h1 {
+      text-align: center;
+      color: white;
+    }
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+    }
+    footer a {
+      color: #aaa;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DOSSim</h1>
+    <div id="dos-container"></div>
+    <div class="terminal">
+      <input id="terminal-input" class="prompt" type="text" autofocus />
+    </div>
+    <footer>
+      <p>DOSSim &copy; 2025 | <a href="https://github.com/vgrichina/dos-sim" target="_blank">GitHub</a> | <a href="https://js-dos.com" target="_blank">js-dos</a></p>
+    </footer>
+  </div>
+
+  <script src="https://js-dos.com/cdn/js-dos.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utilities.js"></script>
+  <script src="js/api-service.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

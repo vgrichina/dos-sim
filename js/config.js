@@ -1,0 +1,50 @@
+/**
+ * DOSSim Configuration
+ * 
+ * This file contains configuration settings for DOSSim.
+ * Modify these settings to customize the behavior of the application.
+ */
+
+const DOSSimConfig = {
+  // js-dos configuration
+  jsDos: {
+    wasm: true,
+    cycles: "max",
+    // URL to the GW-BASIC bundle
+    gwBasicUrl: "https://cdn.dos.zone/original/2X/2/24b00b14f118815e70c27306d21a3c5f80c90fe4.jsdos"
+  },
+  
+  // Initial virtual filesystem
+  virtualFs: {
+    initialFiles: ["README.TXT"],
+    readmeContent: "Welcome to DOSSim!\r\nType HELP for available commands.\r\n"
+  },
+  
+  // AI configuration
+  ai: {
+    // Set to true to use a real AI service instead of mock
+    useRealAi: false,
+    
+    // API endpoint (only used if useRealAi is true)
+    apiEndpoint: "https://api.example.com/generate",
+    
+    // API key (only used if useRealAi is true)
+    apiKey: "",
+    
+    // Streaming parameters
+    streamingDelay: 300 // ms between chunks in mock mode
+  },
+  
+  // User interface settings
+  ui: {
+    promptText: "C:\\>",
+    terminalWidth: 640,
+    terminalHeight: 400
+  },
+  
+  // System settings
+  system: {
+    pollingInterval: 100, // ms
+    rateLimitInterval: 1000 // ms between commands
+  }
+};
