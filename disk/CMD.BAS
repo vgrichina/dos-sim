@@ -13,9 +13,13 @@
 75   PRINT ASC(MID$(CMD$, I, 1)); " ";
 76 NEXT I
 77 PRINT
-78 ' Convert to uppercase manually
-79 GOSUB 3000 ' Go to uppercase conversion subroutine
-80 PRINT "DEBUG: Command after uppercase is '"; CMD$; "', LEN="; LEN(CMD$)
+78 PRINT "CMD-READ: About to convert to uppercase"
+79 ' Convert to uppercase manually
+80 ON ERROR GOTO 2500
+81 PRINT "CMD-READ: About to GOSUB 3000"
+81 GOSUB 3000 ' Go to uppercase conversion subroutine
+82 PRINT "CMD-READ: Uppercase conversion complete - returned from subroutine!"
+83 PRINT "DEBUG: Command after uppercase is '"; CMD$; "', LEN="; LEN(CMD$)
 85 IF CMD$ = "" THEN PRINT "CMD-READ: Empty command detected": GOTO 60
 90 IF CMD$ = "EXIT" THEN PRINT "Exiting DOSSim..." : SYSTEM
 95 ' Check if it's a generative prompt
@@ -31,6 +35,7 @@
 126 PRINT "DOS-EXEC: Command executed successfully"
 130 GOTO 60
 
+1999 PRINT "ERROR: Accidental entry to SHELL error handler!": END
 2000 ' Error handler for SHELL command
 2005 A = ERR : B = ERL
 2010 PRINT "DOS-ERROR: Error"; A; "at line"; B; "while executing '"; CMD$; "'"
@@ -43,6 +48,14 @@
 2080 IF A = 2 THEN PRINT "DOS-ERROR: Syntax error"
 2090 PRINT "DOS-ERROR: Returning to command prompt"
 2095 RESUME 130
+
+2499 PRINT "ERROR: Accidental entry to uppercase error handler!": END
+2500 ' Error handler for uppercase conversion
+2505 E = ERR : L = ERL
+2510 PRINT "UPPERCASE-ERROR: Error"; E; "at line"; L
+2520 PRINT "UPPERCASE-ERROR: Continuing without uppercase conversion"
+2525 ON ERROR GOTO 0
+2530 RESUME 85
 
 300 ' Handle BASIC file generation
 305 PRINT "GEN-CMD: Sending generation command"
@@ -67,9 +80,9 @@
 465 PRINT "READING: Starting to read file content"
 470 WHILE NOT EOF(2)
 475   PRINT "READING: Reading a line from file"
-480   LINE INPUT #2, LINE$
-485   PRINT "READING: Got line: "; LINE$
-490   BUFFER$ = BUFFER$ + LINE$ + CHR$(13) + CHR$(10)
+480   LINE INPUT #2, INDATA$
+485   PRINT "READING: Got line: "; INDATA$
+490   BUFFER$ = BUFFER$ + INDATA$ + CHR$(13) + CHR$(10)
 495   PRINT "READING: Added to buffer"
 500 WEND
 505 PRINT "READING: Finished reading file"
@@ -83,6 +96,7 @@
 520 IF LEN(BUFFER$) > LASTPOS THEN GOSUB 600 : LASTPOS = LEN(BUFFER$)
 530 GOTO 420
 
+599 PRINT "ERROR: Accidental entry to content processing routine!": END
 600 ' Process new content
 605 PRINT "PROCESS-FLOW: Processing new content"
 610 NEWCONTENT$ = MID$(BUFFER$, LASTPOS + 1)
@@ -108,6 +122,7 @@
 640 END IF
 650 RETURN
 
+999 PRINT "ERROR: Accidental entry to file error handler!": END
 1000 ' Error handler for file not found
 1001 A = ERR : B = ERL
 1005 PRINT "ERROR HANDLER: Error"; A; "at line"; B
@@ -118,12 +133,25 @@
 1030 PRINT "ERROR HANDLER: Returning to polling"
 1035 RESUME 420 ' Go back to polling loop
 
+2999 PRINT "ERROR: Accidental entry to uppercase routine!": END
 3000 ' Uppercase conversion subroutine
+3005 PRINT "UPPER-SUB: Starting uppercase conversion"
 3010 TEMP$ = ""
 3020 FOR I = 1 TO LEN(CMD$)
+3025   PRINT "UPPER-SUB: Processing char"; I;
 3030   C$ = MID$(CMD$, I, 1)
-3040   IF C$ >= "a" AND C$ <= "z" THEN C$ = CHR$(ASC(C$) - 32)
+3035   PRINT "UPPER-SUB: Char is '"; C$; "' ASCII="; ASC(C$)
+3040   IF C$ >= "a" AND C$ <= "z" THEN GOTO 3045
+3042   PRINT "UPPER-SUB: No conversion needed"
+3043   GOTO 3050
+3045   PRINT "UPPER-SUB: Converting to uppercase"
+3046   C$ = CHR$(ASC(C$) - 32)
 3050   TEMP$ = TEMP$ + C$
+3055   PRINT "UPPER-SUB: Added to temp string, length now"; LEN(TEMP$)
 3060 NEXT I
+3065 PRINT "UPPER-SUB: Conversion complete, setting CMD$"
 3070 CMD$ = TEMP$
+3075 PRINT "UPPER-SUB: CMD$ set to ["; CMD$; "]"
+3076 PRINT "UPPER-SUB: About to RETURN to line 82"
 3080 RETURN
+3081 PRINT "UPPER-SUB: This line should never execute!"
