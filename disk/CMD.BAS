@@ -157,40 +157,46 @@
 770     FILEOPEN = 0
 771   END IF
 772   PRINT "Running " + CLNF$
-775   PRINT "PROCESS-FLOW: File created, exiting to check file"
-780   PRINT "*** Exiting to check if file was created ***"
-785   SYSTEM
-786 ELSEIF LEFT$(INDAT$, 7) = "CHUNK: " THEN
-787   PRINT "PROCESS-FLOW: Code chunk detected"
-788   CHUNK$ = MID$(INDAT$, 7) ' Get content after "CHUNK: "
-789   
-790   ' Display the chunk for user feedback
-791   PRINT CHUNK$;
-792   
-793   ' Also write to the file if we have an active filename
-794   IF CURFILE$ <> "" THEN
-795     ON ERROR GOTO 2900
-796     
-797     ' If file isn't open yet, open it
-798     IF FILEOPEN = 0 THEN
-799       PRINT "PROCESS-FLOW: Creating file: "; CURFILE$
-800       OPEN CURFILE$ FOR OUTPUT AS #3
-801       FILEOPEN = 1
-802     END IF
-803     
-804     ' Write chunk to the open file
-805     PRINT #3, CHUNK$
-806     
-807     ON ERROR GOTO 2700 ' Restore original error handler
-808   END IF
-809 ELSEIF LEFT$(INDAT$, 7) = "ERROR: " THEN
-810   PRINT "PROCESS-FLOW: Error message detected"
-811   PRINT: PRINT "ERROR: "; MID$(INDAT$, 7): PRINT
-812 ELSE
-813   PRINT "PROCESS-FLOW: Unformatted content, printing as-is"
-814   PRINT INDAT$; ' Stream without newline
-815 END IF
-816 RETURN
+775   PRINT "PROCESS-FLOW: File created, running with QB..."
+780   PRINT "*** Running " + CLNF$ + " with QBasic ***"
+782   ' Run the file with QB using SHELL command instead of exiting
+783   RUNQB$ = "QB /run " + CLNF$
+784   PRINT "SHELL command: "; RUNQB$
+785   ON ERROR GOTO 3100 ' Special error handler for SHELL command
+786   SHELL RUNQB$
+787   ON ERROR GOTO 0 ' Clear error handler
+788   PRINT "PROCESS-FLOW: Returned from running file successfully"
+790 ELSEIF LEFT$(INDAT$, 7) = "CHUNK: " THEN
+795   PRINT "PROCESS-FLOW: Code chunk detected"
+800   CHUNK$ = MID$(INDAT$, 7) ' Get content after "CHUNK: "
+805   
+810   ' Display the chunk for user feedback
+815   PRINT CHUNK$;
+820   
+825   ' Also write to the file if we have an active filename
+830   IF CURFILE$ <> "" THEN
+835     ON ERROR GOTO 2900
+840     
+845     ' If file isn't open yet, open it
+850     IF FILEOPEN = 0 THEN
+855       PRINT "PROCESS-FLOW: Creating file: "; CURFILE$
+860       OPEN CURFILE$ FOR OUTPUT AS #3
+865       FILEOPEN = 1
+870     END IF
+875     
+880     ' Write chunk to the open file
+885     PRINT #3, CHUNK$
+890     
+895     ON ERROR GOTO 2700 ' Restore original error handler
+900   END IF
+905 ELSEIF LEFT$(INDAT$, 7) = "ERROR: " THEN
+910   PRINT "PROCESS-FLOW: Error message detected"
+915   PRINT: PRINT "ERROR: "; MID$(INDAT$, 7): PRINT
+920 ELSE
+925   PRINT "PROCESS-FLOW: Unformatted content, printing as-is"
+930   PRINT INDAT$; ' Stream without newline
+935 END IF
+940 RETURN
 
 999 PRINT "ERROR: Accidental entry to file error handler!": END
 1000 ' Error handler for file not found
@@ -226,6 +232,15 @@
 2915 PRINT "FILE ERROR: Problem with file"; CURFILE$
 2920 CLOSE ' Close any open files
 2930 GOTO 60 ' Return to main prompt
+
+3099 PRINT "ERROR: Accidental entry to SHELL runner error handler!": END
+3100 ' Error handler for SHELL QBASIC command
+3105 E = ERR : L = ERL
+3110 PRINT "SHELL ERROR: Error"; E; "at line"; L
+3115 PRINT "SHELL ERROR: Problem running QB with file"; CLNF$
+3120 PRINT "SHELL ERROR: Command was:"; RUNQB$
+3125 ' Return to main prompt after error
+3130 GOTO 60
 
 2999 PRINT "ERROR: Accidental entry to uppercase routine!": END
 3000 ' Uppercase conversion subroutine
