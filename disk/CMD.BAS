@@ -166,8 +166,16 @@
 786   SHELL RUNQB$
 787   ON ERROR GOTO 0 ' Clear error handler
 788   PRINT "PROCESS-FLOW: Returned from running file successfully"
-790 ELSEIF LEFT$(INDAT$, 7) = "CHUNK: " THEN
-795   PRINT "PROCESS-FLOW: Code chunk detected"
+789   PRINT "PROCESS-FLOW: Generation complete, returning to command prompt"
+790   CLOSE #2 ' Make sure the input file is closed
+791   ' Clear input file contents since we've processed everything
+792   OPEN "CMD_IN.TXT" FOR OUTPUT AS #2
+793   CLOSE #2
+794   ' Reset file position for next time
+795   FILEPOS = 1
+796   GOTO 60 ' Return to main command prompt
+798 ELSEIF LEFT$(INDAT$, 7) = "CHUNK: " THEN
+799   PRINT "PROCESS-FLOW: Code chunk detected"
 800   CHUNK$ = MID$(INDAT$, 7) ' Get content after "CHUNK: "
 805   
 810   ' Display the chunk for user feedback
