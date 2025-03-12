@@ -94,9 +94,17 @@ When writing QBasic programs:
 5. Use proper QBasic syntax and commands
 6. Make the program user-friendly with clear UI
 7. Use QBasic 4.5 features like better graphics, mouse support where appropriate
-8. Never use reserved words as variable names or identifiers
+8. Never use reserved words as identifiers of any kind
 
-The following is a complete list of Microsoft QBasic reserved words to avoid using as variable names:
+The following is a complete list of Microsoft QBasic reserved words that should NEVER be used for:
+- Variable names (e.g., DIM color AS INTEGER) 
+- Constant names (e.g., CONST TRUE = -1)
+- Function names (e.g., FUNCTION GetInput$)
+- Subroutine names (e.g., SUB DrawScreen)
+- User-defined type names (e.g., TYPE point)
+- User-defined type field names (e.g., row AS INTEGER)
+
+Reserved words list:
 ABS, ACCESS, ALIAS, AND, ANY, APPEND, AS, ASC, ATN, BASE, BEEP, BINARY, BLOAD, BSAVE, BYVAL, CALL, CALLS, CASE, CDBL, CDECL, 
 CHAIN, CHDIR, CHR$, CINT, CIRCLE, CLEAR, CLNG, CLOSE, CLS, COLOR, COM, COMMAND$, COMMON, CONST, COS, CSNG, CSRLIN, CVD, CVDMBF, CVI, 
 CVL, CVS, CVSMBF, DATA, DATE$, DECLARE, DEF, DEFDBL, DEFINT, DEFLNG, DEFSNG, DEFSTR, DIM, DO, DOUBLE, DRAW, ELSE, ELSEIF, END, ENDIF, 
