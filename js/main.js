@@ -341,16 +341,51 @@ async function handleGenerateRequest(prompt) {
     
     // Generate code via streaming API
     const stream = await aiClient.generateStream(cleanPrompt);
-    let currentContent = "";
+    let previousContent = "";
+    let partialLine = ""; // Buffer for partial lines
     
     // Process the stream chunks
     for await (const chunk of stream) {
-      currentContent = chunk;
-      // Send chunk to CMD_IN.TXT with CHUNK: prefix for streaming display
+      // Extract only the new content from this chunk
+      if (chunk.length > previousContent.length) {
+        const newContent = chunk.substring(previousContent.length);
+        console.log("New content received:", newContent);
+        
+        // Add new content to the partial line buffer
+        partialLine += newContent;
+        
+        // Split buffer into lines
+        const lines = partialLine.split('\n');
+        
+        // Process all complete lines (all except the last one)
+        const completeLines = lines.slice(0, -1);
+        if (completeLines.length > 0) {
+          for (const line of completeLines) {
+            // Send each complete line with its own CHUNK: prefix
+            console.log("Sending complete line:", line);
+            try {
+              await appendToCmdIn("CHUNK: " + line);
+            } catch (writeError) {
+              console.warn("Error writing line to CMD_IN.TXT:", writeError.message);
+            }
+          }
+        }
+        
+        // Keep the last (potentially incomplete) line in the buffer
+        partialLine = lines[lines.length - 1];
+        
+        // Update previous content for next comparison
+        previousContent = chunk;
+      }
+    }
+    
+    // Send any remaining content in the buffer if it's not empty
+    if (partialLine) {
+      console.log("Sending final partial line:", partialLine);
       try {
-        await appendToCmdIn("CHUNK: " + currentContent);
+        await appendToCmdIn("CHUNK: " + partialLine);
       } catch (writeError) {
-        console.warn("Error writing to CMD_IN.TXT:", writeError.message);
+        console.warn("Error writing final content to CMD_IN.TXT:", writeError.message);
       }
     }
     
