@@ -16,10 +16,10 @@
 78 PRINT "CMD-READ: About to convert to uppercase"
 79 ' Convert to uppercase manually
 80 ON ERROR GOTO 2500
-81 PRINT "CMD-READ: About to GOSUB 3000"
-81 GOSUB 3000 ' Go to uppercase conversion subroutine
-82 PRINT "CMD-READ: Uppercase conversion complete - returned from subroutine!"
-83 PRINT "DEBUG: Command after uppercase is '"; CMD$; "', LEN="; LEN(CMD$)
+81 PRINT "CMD-READ: About to convert to uppercase"
+82 GOSUB 3000
+83 PRINT "CMD-READ: Uppercase conversion complete - returned from subroutine!"
+84 PRINT "DEBUG: Command after uppercase is '"; CMD$; "', LEN="; LEN(CMD$)
 85 IF CMD$ = "" THEN PRINT "CMD-READ: Empty command detected": GOTO 60
 90 IF CMD$ = "EXIT" THEN PRINT "Exiting DOSSim..." : SYSTEM
 95 ' Check if it's a generative prompt
@@ -67,60 +67,79 @@
 
 400 ' Polling loop for cmd_in.txt
 405 PRINT "POLLING: Starting loop"
-410 LASTPOS = 0 : BUFFER$ = ""
+406 ' Keep track of file position to avoid reading the same content twice
+407 FPOS = 1 ' Start at position 1 (beginning of file)
+408 MAXBUF = 200 ' Maximum buffer size to avoid string overflow errors
 420 FOR I = 1 TO 150000 : NEXT I ' Increased delay to reduce CPU usage
 425 PRINT "POLLING: Attempting to open CMD_IN.TXT"
 430 ' Try to open file with proper error handling
 435 ON ERROR GOTO 1000
 440 OPEN "CMD_IN.TXT" FOR INPUT AS #2
 445 PRINT "POLLING: Successfully opened CMD_IN.TXT"
-447 GOTO 450
-450 ' We successfully opened the file
-460 BUFFER$ = ""
+455 LNCNT = 0
+456 HVCNT = 0
 465 PRINT "READING: Starting to read file content"
-470 WHILE NOT EOF(2)
+467 FOR I = 1 TO FPOS - 1
+468   IF EOF(2) THEN EXIT FOR
+469   LINE INPUT #2, SKIP$
+470 NEXT I
+471 ' Now process any new lines in the file
+472 ON ERROR GOTO 2700 ' Handle string overflow errors (Error 15)
+473 WHILE NOT EOF(2)
 475   PRINT "READING: Reading a line from file"
-480   LINE INPUT #2, INDATA$
-485   PRINT "READING: Got line: "; INDATA$
-490   BUFFER$ = BUFFER$ + INDATA$ + CHR$(13) + CHR$(10)
-495   PRINT "READING: Added to buffer"
-500 WEND
+476   LINE INPUT #2, INDAT$
+480   PRINT "READING: Got line: "; INDAT$
+481   LNCNT = LNCNT + 1
+482   FPOS = FPOS + 1 ' Track position in file
+483   
+484   ' Process this line immediately instead of buffering
+485   GOSUB 700
+486   
+487   HVCNT = 1 ' Flag that we found content
+488 WEND
 505 PRINT "READING: Finished reading file"
 510 CLOSE #2
-512 ' Add debug output to see buffer contents
-513 PRINT "DEBUG: Buffer length="; LEN(BUFFER$); ", LastPos="; LASTPOS
-514 IF LEN(BUFFER$) > 0 THEN PRINT "DEBUG: First few chars: "; LEFT$(BUFFER$, 10)
-515 ' Empty the file after reading it
-516 OPEN "CMD_IN.TXT" FOR OUTPUT AS #3
-517 CLOSE #3
-520 IF LEN(BUFFER$) > LASTPOS THEN GOSUB 600 : LASTPOS = LEN(BUFFER$)
+515 ' Don't empty the file - JS keeps appending to it
+520 ' Only need to reset file position if file was manually edited or deleted
+525 IF LNCNT = 0 AND HVCNT = 0 THEN FPOS = 1
 530 GOTO 420
 
-599 PRINT "ERROR: Accidental entry to content processing routine!": END
-600 ' Process new content
-605 PRINT "PROCESS-FLOW: Processing new content"
-610 NEWCONTENT$ = MID$(BUFFER$, LASTPOS + 1)
-615 PRINT "DEBUG: Got content: "; NEWCONTENT$
-620 IF LEFT$(NEWCONTENT$, 4) = "RUN:" THEN
-622   PRINT "PROCESS-FLOW: RUN command detected"
-623   PRINT
-624   RUNFILE$ = MID$(NEWCONTENT$, 5)
-625   PRINT "PROCESS-FLOW: Extracted filename: "; RUNFILE$
-626   ' Clean filename - remove non-printable characters
-627   CLEANFILE$ = ""
-628   FOR I = 1 TO LEN(RUNFILE$)
-629     C$ = MID$(RUNFILE$, I, 1)
-630     IF ASC(C$) >= 32 AND ASC(C$) < 127 THEN CLEANFILE$ = CLEANFILE$ + C$
-631   NEXT I
-632   PRINT "PROCESS-FLOW: Clean filename: "; CLEANFILE$
-633   PRINT "Running " + CLEANFILE$
-634   PRINT "PROCESS-FLOW: About to run file"
-635   RUN CLEANFILE$
-636 ELSE
-637   PRINT "PROCESS-FLOW: Standard content, printing to screen"
-638   PRINT NEWCONTENT$; ' Stream without newline
-640 END IF
-650 RETURN
+599 PRINT "ERROR: Accidental entry to old content processing routine!": END
+600 ' Old process routine (keeping for reference)
+605 PRINT "PROCESS-FLOW: [OLD] Processing new content"
+610 PRINT "WARNING: Using old processing routine!"
+615 RETURN
+
+699 PRINT "ERROR: Accidental entry to line processing routine!": END
+700 ' Process single line of content
+705 PRINT "PROCESS-FLOW: Processing line: "; INDAT$
+710 IF LEFT$(INDAT$, 5) = "RUN: " THEN
+715   PRINT "PROCESS-FLOW: RUN command detected"
+720   PRINT
+725   RUNF$ = MID$(INDAT$, 5)
+730   PRINT "PROCESS-FLOW: Extracted filename: "; RUNF$
+735   ' Clean filename - remove non-printable characters
+740   CLNF$ = ""
+745   FOR I = 1 TO LEN(RUNF$)
+750     C$ = MID$(RUNF$, I, 1)
+755     IF ASC(C$) >= 32 AND ASC(C$) < 127 THEN CLNF$ = CLNF$ + C$
+760   NEXT I
+765   PRINT "PROCESS-FLOW: Clean filename: "; CLNF$
+770   PRINT "Running " + CLNF$
+775   PRINT "PROCESS-FLOW: File created, exiting to check file"
+780   PRINT "*** Exiting to check if file was created ***"
+785   SYSTEM
+786 ELSEIF LEFT$(INDAT$, 7) = "CHUNK: " THEN
+790   PRINT "PROCESS-FLOW: Code chunk detected"
+795   PRINT MID$(INDAT$, 7); ' Stream without the CHUNK: prefix
+800 ELSEIF LEFT$(INDAT$, 7) = "ERROR: " THEN
+805   PRINT "PROCESS-FLOW: Error message detected"
+810   PRINT: PRINT "ERROR: "; MID$(INDAT$, 7): PRINT
+815 ELSE
+820   PRINT "PROCESS-FLOW: Unformatted content, printing as-is"
+825   PRINT INDAT$; ' Stream without newline
+830 END IF
+835 RETURN
 
 999 PRINT "ERROR: Accidental entry to file error handler!": END
 1000 ' Error handler for file not found
@@ -132,6 +151,22 @@
 1025 FOR I = 1 TO 300000 : NEXT I ' Much longer delay when file not found
 1030 PRINT "ERROR HANDLER: Returning to polling"
 1035 RESUME 420 ' Go back to polling loop
+
+2699 PRINT "ERROR: Accidental entry to string overflow handler!": END
+2700 ' Error handler for string overflow (Error 15)
+2705 E = ERR : L = ERL
+2710 PRINT "ERROR HANDLER: Error"; E; "at line"; L
+2715 IF E = 15 THEN
+2720   PRINT "ERROR HANDLER: String overflow detected"
+2725   CLOSE ' Close any open files
+2730   PRINT "ERROR HANDLER: Continuing with processing"
+2735   RESUME 510 ' Skip to the end of file reading
+2740 ELSE
+2745   ' For any other error, close files and continue polling
+2750   PRINT "ERROR HANDLER: Unexpected error"
+2755   CLOSE
+2760   RESUME 525 ' Continue polling
+2765 END IF
 
 2999 PRINT "ERROR: Accidental entry to uppercase routine!": END
 3000 ' Uppercase conversion subroutine
@@ -152,6 +187,6 @@
 3065 PRINT "UPPER-SUB: Conversion complete, setting CMD$"
 3070 CMD$ = TEMP$
 3075 PRINT "UPPER-SUB: CMD$ set to ["; CMD$; "]"
-3076 PRINT "UPPER-SUB: About to RETURN to line 82"
+3076 PRINT "UPPER-SUB: About to RETURN from subroutine"
 3080 RETURN
 3081 PRINT "UPPER-SUB: This line should never execute!"

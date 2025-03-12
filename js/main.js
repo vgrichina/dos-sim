@@ -13,6 +13,24 @@ let commandInterface; // CommandInterface from js-dos
 let lastQueryTime = 0; // Prevent spam
 let virtualFiles = DOSSimConfig.virtualFs.initialFiles.slice(); // Copy of initial files in our virtual FS
 
+// Helper function to find a file in the js-dos file tree
+function findFile(node, filename) {
+  if (!node || !node.nodes) return null;
+  
+  for (const child of node.nodes) {
+    if (child.name.toUpperCase() === filename.toUpperCase()) {
+      return child.name; // Return actual filename with correct case
+    }
+    
+    // Recursively search subdirectories
+    if (child.nodes) {
+      const found = findFile(child, filename);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 // Use AI clients from api-service.js
 
 // Clean up DOSBox when we're done
@@ -38,31 +56,61 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Fetch the required files
     console.log("Fetching required files...");
     
-    // Define file paths
-    const basFiles = ["CMD.BAS", "TEST.BAS"]; // List of BAS files to include
-    const fetchPromises = [
-      fetch("disk/GWBASIC.EXE"),
-      ...basFiles.map(file => fetch(`disk/${file}`).catch(err => {
-        console.warn(`Could not load ${file}:`, err);
-        return null; // Return null for failed requests
-      }))
+    // Define all files by type for consistent handling
+    const allFiles = [
+      { name: "GWBASIC.EXE", type: "binary" },
+      { name: "QB.EXE", type: "binary" },
+      { name: "UHEX.COM", type: "binary" },
+      { name: "CMD.BAS", type: "text" },
+      { name: "TEST.BAS", type: "text" },
+      { name: "README.TXT", type: "text" }
     ];
+    
+    // Fetch all files from disk
+    const fetchPromises = allFiles.map(file => 
+      fetch(`disk/${file.name}`).catch(err => {
+        console.warn(`Could not load ${file.name}:`, err);
+        return null; // Return null for failed requests
+      })
+    );
     
     // Fetch all files
     const responses = await Promise.all(fetchPromises);
-    const gwbasicResponse = responses[0];
-    const basResponses = responses.slice(1).filter(Boolean); // Filter out failed fetches
     
-    // Process the responses
-    const gwbasicBinary = await gwbasicResponse.arrayBuffer();
-    const basContents = await Promise.all(
-      basResponses.map(async (response, index) => {
+    // Process all files based on their type
+    const processedFiles = await Promise.all(
+      responses.map(async (response, index) => {
         if (!response) return null;
-        const text = await response.text();
-        return {
-          path: basFiles[index],
-          content: text.replace(/\n/g, "\r\n") // Convert to DOS line endings (CRLF)
-        };
+        
+        const fileInfo = allFiles[index];
+        try {
+          if (fileInfo.type === "text") {
+            // Process text file
+            const text = await response.text();
+            const contents = encodeDOSText(text); // Use utility function for DOS text encoding
+            
+            // Generate hexdump for BAS files for debugging
+            if (fileInfo.name.endsWith(".BAS")) {
+              console.log(`Hexdump of ${fileInfo.name}:`);
+              console.log(hexdump(contents));
+            }
+            
+            return {
+              path: fileInfo.name,
+              contents
+            };
+          } else {
+            // Process binary file
+            const binary = await response.arrayBuffer();
+            return {
+              path: fileInfo.name,
+              contents: new Uint8Array(binary)
+            };
+          }
+        } catch (err) {
+          console.error(`Error processing ${fileInfo.name}:`, err);
+          return null;
+        }
       })
     );
     
@@ -72,15 +120,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("dos-container");
     container.innerHTML = '<div class="jsdos-rso"></div>';
     
-    // Create file list for initialization
-    const files = [
-      { path: "GWBASIC.EXE", contents: new Uint8Array(gwbasicBinary) },
-      ...basContents.filter(Boolean).map(file => ({ 
-        path: file.path, 
-        contents: new TextEncoder().encode(file.content) 
-      })),
-      { path: "README.TXT", contents: new TextEncoder().encode(DOSSimConfig.virtualFs.readmeContent.replace(/\n/g, "\r\n")) }
-    ];
+    // Files are already processed in the correct format
+    const files = processedFiles.filter(Boolean);
     
     console.log("Initialized files:", files.map(f => f.path));
     
@@ -90,7 +131,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         [autoexec]
         mount c .
         c:
-        GWBASIC.EXE CMD.BAS
+        REM GWBASIC.EXE CMD.BAS
+        qb cmd.bas
         
         [cpu]
         cputype pentium_mmx
@@ -163,25 +205,7 @@ async function pollCmdOutput() {
       try {
         const fileTree = await commandInterface.fsTree();
         
-        // Helper function to search the file tree
-        function findFile(node, filename) {
-          if (!node || !node.nodes) return null;
-          
-          for (const child of node.nodes) {
-            if (child.name.toUpperCase() === filename.toUpperCase()) {
-              return child.name; // Return actual filename with correct case
-            }
-            
-            // Recursively search subdirectories
-            if (child.nodes) {
-              const found = findFile(child, filename);
-              if (found) return found;
-            }
-          }
-          return null;
-        }
-        
-        // Search for our file
+        // Search for our file using the global findFile function
         const actualFilename = findFile(fileTree, "CMD_OUT.TXT");
         
         if (!actualFilename) {
@@ -195,8 +219,8 @@ async function pollCmdOutput() {
         const outputBuffer = await commandInterface.fsReadFile(actualFilename);
         console.log("Successfully read file contents!");
         
-        // Process the file contents
-        const output = new TextDecoder().decode(outputBuffer);
+        // Process the file contents with DOS line ending normalization
+        const output = decodeDOSText(outputBuffer);
         console.log("Received command output:", output);
         
         // Skip empty files
@@ -247,22 +271,65 @@ async function handleCmdOutput(output) {
   lastQueryTime = now;
   
   try {
-    console.log("Processing command output:", output);
-    if (output.startsWith("GENERATE:")) {
-      console.log("Processing GENERATE command:", output.slice(9));
-      await handleGenerateRequest(output.slice(9));
+    // Output should already be cleaned by decodeDOSText, just trim
+    const cleanOutput = output.trim();
+    console.log("Processing command output:", cleanOutput);
+    
+    if (cleanOutput.startsWith("GENERATE:")) {
+      const prompt = cleanOutput.slice(9);
+      console.log("Processing GENERATE command:", prompt);
+      await handleGenerateRequest(prompt);
     } else {
-      console.warn("Unknown command received:", output);
+      console.warn("Unknown command received:", cleanOutput);
     }
   } catch (error) {
     console.error("Error handling CMD output:", error);
     // Write error to cmd_in.txt
     try {
-      const errorMsg = "Error: " + error.message;
-      await commandInterface.fsWriteFile("CMD_IN.TXT", new TextEncoder().encode(errorMsg));
+      const errorMsg = "ERROR: " + error.message;
+      await appendToCmdIn(errorMsg);
     } catch (writeError) {
       console.error("Failed to write error message:", writeError);
     }
+  }
+}
+
+// Function to append to CMD_IN.TXT
+async function appendToCmdIn(content) {
+  try {
+    // First read existing content if any
+    let existingContent = new Uint8Array(0);
+    
+    // Check if file exists first using the file tree
+    const fileTree = await commandInterface.fsTree();
+    const actualFilename = findFile(fileTree, "CMD_IN.TXT");
+    
+    // If file exists, read its content
+    if (actualFilename) {
+      try {
+        existingContent = await commandInterface.fsReadFile(actualFilename);
+        console.log("Successfully read existing CMD_IN.TXT");
+      } catch (readErr) {
+        console.warn("Error reading CMD_IN.TXT:", readErr);
+      }
+    } else {
+      console.log("CMD_IN.TXT does not exist yet, will create it");
+    }
+    
+    // Decode existing content with proper DOS line ending handling
+    let existingText = "";
+    if (existingContent.length > 0) {
+      existingText = decodeDOSText(existingContent);
+    }
+    
+    // Append new content with a newline
+    const combinedText = existingText + content + "\n";
+    
+    // Encode back to DOS format and write to file
+    await commandInterface.fsWriteFile("CMD_IN.TXT", encodeDOSText(combinedText));
+    console.log("Successfully appended to CMD_IN.TXT");
+  } catch (error) {
+    console.error("Error appending to CMD_IN.TXT:", error);
   }
 }
 
@@ -271,21 +338,24 @@ async function handleGenerateRequest(prompt) {
   try {
     // Get the AI client using the factory
     const aiClient = AIClientFactory.createClient(DOSSimConfig.ai);
-    console.log("Generating code for prompt:", prompt);
     
-    // Extract the filename from the prompt
-    const filename = prompt.split(" ")[0];
+    // Prompt should already be cleaned, just trim
+    const cleanPrompt = prompt.trim();
+    console.log("Generating code for prompt:", cleanPrompt);
+    
+    // Extract the filename from the prompt (first word)
+    const filename = cleanPrompt.split(/\s+/)[0];
     
     // Generate code via streaming API
-    const stream = await aiClient.generateStream(prompt);
+    const stream = await aiClient.generateStream(cleanPrompt);
     let currentContent = "";
     
     // Process the stream chunks
     for await (const chunk of stream) {
       currentContent = chunk;
-      // Write current content to CMD_IN.TXT for streaming display
+      // Send chunk to CMD_IN.TXT with CHUNK: prefix for streaming display
       try {
-        await commandInterface.fsWriteFile("CMD_IN.TXT", new TextEncoder().encode(currentContent));
+        await appendToCmdIn("CHUNK: " + currentContent);
       } catch (writeError) {
         console.warn("Error writing to CMD_IN.TXT:", writeError.message);
       }
@@ -298,23 +368,23 @@ async function handleGenerateRequest(prompt) {
     
     // Write the complete file
     try {
-      await commandInterface.fsWriteFile(filename, new TextEncoder().encode(currentContent));
+      // Convert to DOS format before writing
+      await commandInterface.fsWriteFile(filename, encodeDOSText(currentContent));
       console.log(`File ${filename} created successfully`);
       
       // Send command to run the file
-      const runCommand = "RUN:" + filename.trim();
+      const runCommand = "RUN: " + filename.trim(); // Note the space after RUN:
       console.log("Sending RUN command to BASIC:", runCommand);
-      // Add a newline to ensure proper parsing in BASIC
-      await commandInterface.fsWriteFile("CMD_IN.TXT", new TextEncoder().encode(runCommand + "\r\n"));
+      await appendToCmdIn(runCommand);
     } catch (fileError) {
       console.error(`Error writing ${filename}:`, fileError);
-      await commandInterface.fsWriteFile("CMD_IN.TXT", new TextEncoder().encode(`Error creating ${filename}: ${fileError.message}`));
+      await appendToCmdIn(`ERROR: Error creating ${filename}: ${fileError.message}`);
     }
   } catch (error) {
     console.error("Error generating code:", error);
-    const errorMsg = "Error generating code: " + error.message;
+    const errorMsg = "ERROR: " + error.message;
     try {
-      await commandInterface.fsWriteFile("CMD_IN.TXT", new TextEncoder().encode(errorMsg));
+      await appendToCmdIn(errorMsg);
     } catch (e) {
       console.error("Failed to write error message:", e);
     }
