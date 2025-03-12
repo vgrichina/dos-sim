@@ -1,7 +1,10 @@
 10 ' Configuration variables - easy to adjust
 11 POLLDELAY = 150000 * 10 ' Polling delay (10x for QBasic)
 12 ERRDELAY = 300000 * 10 ' Error delay (10x for QBasic)
-15 CLS
+13 ' Global variables
+14 CURFILE$ = "" ' Current file being generated
+15 FILEOPEN = 0 ' Flag to track if output file is open
+16 CLS
 20 PRINT "DOSSim v1.0 - DOS Experience in the Browser"
 30 PRINT "Type DOS commands or generate BASIC apps using [NAME].BAS parameters"
 40 PRINT "Example: MARIO.BAS /no-koopas /play-as-princess"
@@ -61,11 +64,30 @@
 2530 RESUME 85
 
 300 ' Handle BASIC file generation
-305 PRINT "GEN-CMD: Sending generation command"
-310 OPEN "CMD_OUT.TXT" FOR OUTPUT AS #1
-320 PRINT #1, "GENERATE:" + CMD$
-330 CLOSE #1
-335 PRINT "GEN-CMD: Generation command sent, going to polling loop"
+301 ' First, extract filename from command (first word)
+302 CMDLEN = LEN(CMD$)
+303 CMDPOS = 1
+304 CURFILE$ = ""
+305 ' Skip leading spaces
+306 WHILE CMDPOS <= CMDLEN AND MID$(CMD$, CMDPOS, 1) = " "
+307   CMDPOS = CMDPOS + 1
+308 WEND
+309 ' Extract filename (up to first space)
+310 WHILE CMDPOS <= CMDLEN AND MID$(CMD$, CMDPOS, 1) <> " "
+311   CURFILE$ = CURFILE$ + MID$(CMD$, CMDPOS, 1)
+312   CMDPOS = CMDPOS + 1
+313 WEND
+314 PRINT "GEN-CMD: Extracted filename: "; CURFILE$
+315 ' Reset file open flag
+316 FILEOPEN = 0
+317 ' Just set the filename, we'll open the file when we get the first chunk
+318 PRINT "GEN-CMD: File will be created when first chunk arrives..."
+320 ' Send generation command
+322 PRINT "GEN-CMD: Sending generation command"
+323 OPEN "CMD_OUT.TXT" FOR OUTPUT AS #1
+324 PRINT #1, "GENERATE:" + CMD$
+325 CLOSE #1
+330 PRINT "GEN-CMD: Generation command sent, going to polling loop"
 340 GOTO 400 ' Go to polling loop after sending the command
 
 400 ' Polling loop for cmd_in.txt
@@ -128,21 +150,47 @@
 755     IF ASC(C$) >= 32 AND ASC(C$) < 127 THEN CLNF$ = CLNF$ + C$
 760   NEXT I
 765   PRINT "PROCESS-FLOW: Clean filename: "; CLNF$
-770   PRINT "Running " + CLNF$
+766   ' Close the file if it's open
+767   IF FILEOPEN = 1 THEN
+768     PRINT "PROCESS-FLOW: Closing open file..."
+769     CLOSE #3
+770     FILEOPEN = 0
+771   END IF
+772   PRINT "Running " + CLNF$
 775   PRINT "PROCESS-FLOW: File created, exiting to check file"
 780   PRINT "*** Exiting to check if file was created ***"
 785   SYSTEM
 786 ELSEIF LEFT$(INDAT$, 7) = "CHUNK: " THEN
-790   PRINT "PROCESS-FLOW: Code chunk detected"
-795   PRINT MID$(INDAT$, 7); ' Stream without the CHUNK: prefix
-800 ELSEIF LEFT$(INDAT$, 7) = "ERROR: " THEN
-805   PRINT "PROCESS-FLOW: Error message detected"
-810   PRINT: PRINT "ERROR: "; MID$(INDAT$, 7): PRINT
-815 ELSE
-820   PRINT "PROCESS-FLOW: Unformatted content, printing as-is"
-825   PRINT INDAT$; ' Stream without newline
-830 END IF
-835 RETURN
+787   PRINT "PROCESS-FLOW: Code chunk detected"
+788   CHUNK$ = MID$(INDAT$, 7) ' Get content after "CHUNK: "
+789   
+790   ' Display the chunk for user feedback
+791   PRINT CHUNK$;
+792   
+793   ' Also write to the file if we have an active filename
+794   IF CURFILE$ <> "" THEN
+795     ON ERROR GOTO 2900
+796     
+797     ' If file isn't open yet, open it
+798     IF FILEOPEN = 0 THEN
+799       PRINT "PROCESS-FLOW: Creating file: "; CURFILE$
+800       OPEN CURFILE$ FOR OUTPUT AS #3
+801       FILEOPEN = 1
+802     END IF
+803     
+804     ' Write chunk to the open file
+805     PRINT #3, CHUNK$
+806     
+807     ON ERROR GOTO 2700 ' Restore original error handler
+808   END IF
+809 ELSEIF LEFT$(INDAT$, 7) = "ERROR: " THEN
+810   PRINT "PROCESS-FLOW: Error message detected"
+811   PRINT: PRINT "ERROR: "; MID$(INDAT$, 7): PRINT
+812 ELSE
+813   PRINT "PROCESS-FLOW: Unformatted content, printing as-is"
+814   PRINT INDAT$; ' Stream without newline
+815 END IF
+816 RETURN
 
 999 PRINT "ERROR: Accidental entry to file error handler!": END
 1000 ' Error handler for file not found
@@ -170,6 +218,14 @@
 2755   CLOSE
 2760   RESUME 525 ' Continue polling
 2765 END IF
+
+2899 PRINT "ERROR: Accidental entry to file operation handler!": END
+2900 ' Error handler for file operations
+2905 E = ERR : L = ERL
+2910 PRINT "FILE ERROR: Error"; E; "at line"; L
+2915 PRINT "FILE ERROR: Problem with file"; CURFILE$
+2920 CLOSE ' Close any open files
+2930 GOTO 60 ' Return to main prompt
 
 2999 PRINT "ERROR: Accidental entry to uppercase routine!": END
 3000 ' Uppercase conversion subroutine

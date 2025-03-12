@@ -359,19 +359,14 @@ async function handleGenerateRequest(prompt) {
       virtualFiles.push(filename);
     }
     
-    // Write the complete file
+    // Send command to run the file (BASIC side will handle file operations)
     try {
-      // Convert to DOS format before writing
-      await commandInterface.fsWriteFile(filename, encodeDOSText(currentContent));
-      console.log(`File ${filename} created successfully`);
-      
-      // Send command to run the file
       const runCommand = "RUN: " + filename.trim(); // Note the space after RUN:
       console.log("Sending RUN command to BASIC:", runCommand);
       await appendToCmdIn(runCommand);
-    } catch (fileError) {
-      console.error(`Error writing ${filename}:`, fileError);
-      await appendToCmdIn(`ERROR: Error creating ${filename}: ${fileError.message}`);
+    } catch (error) {
+      console.error(`Error sending run command:`, error);
+      await appendToCmdIn(`ERROR: Error running ${filename}: ${error.message}`);
     }
   } catch (error) {
     console.error("Error generating code:", error);
