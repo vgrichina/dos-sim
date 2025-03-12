@@ -22,13 +22,16 @@ class BaseAIClient {
   parsePrompt(prompt) {
     const parts = prompt.split(" ");
     const filename = parts[0];
+    
+    // Process options - convert both "/option" and "option" formats to lowercase
     const options = parts.slice(1).map(opt => {
-      if (opt.startsWith("/")) {
-        return opt.substring(1);
-      }
-      return opt;
+      // Strip the leading slash if it exists
+      const cleanOpt = opt.startsWith("/") ? opt.substring(1) : opt;
+      // Convert to lowercase for case-insensitive option handling
+      return cleanOpt.toLowerCase();
     });
     
+    console.log(`Parsed prompt: filename=${filename}, options=${options.join(', ')}`);
     return { filename, options };
   }
 }
@@ -64,7 +67,23 @@ class OpenRouterClient extends BaseAIClient {
     
     const { filename, options } = this.parsePrompt(prompt);
     
-    const systemPrompt = `You are an expert QBasic 4.5 programmer in an MS-DOS environment from the mid-1990s. 
+    // Load example QBasic files if requested
+    const loadExampleFile = async (filename) => {
+      try {
+        const response = await fetch(`qbasic-examples/${filename}`);
+        if (!response.ok) {
+          console.error(`Failed to load example file ${filename}: ${response.status}`);
+          return null;
+        }
+        return await response.text();
+      } catch (error) {
+        console.error(`Error loading example file ${filename}:`, error);
+        return null;
+      }
+    };
+
+    // Build the system prompt with optional example files
+    let systemPromptText = `You are an expert QBasic 4.5 programmer in an MS-DOS environment from the mid-1990s. 
 Your task is to generate QBasic code that runs on MS-DOS machines with QB.EXE.
 
 When writing QBasic programs:
@@ -74,10 +93,39 @@ When writing QBasic programs:
 4. Include comments for key sections
 5. Use proper QBasic syntax and commands
 6. Make the program user-friendly with clear UI
-7. Use QBasic 4.5 features like better graphics, mouse support where appropriate
+7. Use QBasic 4.5 features like better graphics, mouse support where appropriate`;
 
-The code should be output with NO markdown formatting or explanation - ONLY output the raw QBasic code.
+    // Always load example files
+    console.log("Loading QBasic example files...");
+    const exampleFiles = ["NIBBLES.BAS", "MONEY.BAS"];
+    const exampleContents = await Promise.all(exampleFiles.map(file => loadExampleFile(file)));
+    
+    // Filter out any files that failed to load
+    const loadedExamples = exampleFiles.filter((_, index) => exampleContents[index] !== null);
+    const loadedContents = exampleContents.filter(content => content !== null);
+    
+    if (loadedExamples.length > 0) {
+      systemPromptText += `\n\nHere are some examples of well-structured QBasic programs to learn from:\n`;
+      
+      for (let i = 0; i < loadedExamples.length; i++) {
+        const description = loadedExamples[i] === "NIBBLES.BAS" ? 
+          "A snake game implemented in QBasic" : 
+          "A personal finance manager in QBasic";
+          
+        systemPromptText += `\nExample ${i+1}: ${loadedExamples[i]} - ${description}
+\`\`\`qbasic
+${loadedContents[i]}
+\`\`\`\n`;
+      }
+      
+      systemPromptText += `\nUse these as references for QBasic coding style, structure and techniques. Your task is to create a new, original program based on the user's request, not to modify these examples.`;
+    }
+
+    // Add the final instruction
+    systemPromptText += `\n\nThe code should be output with NO markdown formatting or explanation - ONLY output the raw QBasic code.
 Do not use any special instructions or notes, just the QBasic code itself.`;
+
+    const systemPrompt = systemPromptText;
 
     try {
       const response = await fetch(this.apiEndpoint, {
