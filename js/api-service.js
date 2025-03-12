@@ -93,7 +93,22 @@ When writing QBasic programs:
 4. Include comments for key sections
 5. Use proper QBasic syntax and commands
 6. Make the program user-friendly with clear UI
-7. Use QBasic 4.5 features like better graphics, mouse support where appropriate`;
+7. Use QBasic 4.5 features like better graphics, mouse support where appropriate
+8. Never use reserved words as variable names or identifiers
+
+The following is a complete list of Microsoft QBasic reserved words to avoid using as variable names:
+ABS, ACCESS, ALIAS, AND, ANY, APPEND, AS, ASC, ATN, BASE, BEEP, BINARY, BLOAD, BSAVE, BYVAL, CALL, CALLS, CASE, CDBL, CDECL, 
+CHAIN, CHDIR, CHR$, CINT, CIRCLE, CLEAR, CLNG, CLOSE, CLS, COLOR, COM, COMMAND$, COMMON, CONST, COS, CSNG, CSRLIN, CVD, CVDMBF, CVI, 
+CVL, CVS, CVSMBF, DATA, DATE$, DECLARE, DEF, DEFDBL, DEFINT, DEFLNG, DEFSNG, DEFSTR, DIM, DO, DOUBLE, DRAW, ELSE, ELSEIF, END, ENDIF, 
+ENVIRON, ENVIRON$, EOF, EQV, ERASE, ERDEV, ERDEV$, ERL, ERR, ERROR, EXIT, EXP, FIELD, FILEATTR, FILES, FIX, FOR, FRE, FREEFILE, 
+FUNCTION, GET, GOSUB, GOTO, HEX$, IF, IMP, INKEY$, INP, INPUT, INPUT$, INSTR, INT, INTEGER, IOCTL, IOCTL$, IS, KEY, KILL, LBOUND, 
+LCASE$, LEFT$, LEN, LET, LINE, LIST, LOC, LOCAL, LOCATE, LOCK, LOF, LOG, LONG, LOOP, LPOS, LPRINT, LSET, LTRIM$, MID$, MKD$, MKDIR, 
+MKDMBF$, MKI$, MKL$, MKS$, MKSMBF$, MOD, NAME, NEXT, NOT, OCT$, OFF, ON, OPEN, OPTION, OR, OUT, OUTPUT, PAINT, PALETTE, PCOPY, PEEK, 
+PEN, PLAY, PMAP, POINT, POKE, POS, PRESET, PRINT, PSET, PUT, RANDOM, RANDOMIZE, READ, REDIM, REM, RESET, RESTORE, RESUME, RETURN, 
+RIGHT$, RMDIR, RND, RSET, RTRIM$, RUN, SADD, SCREEN, SEEK, SEG, SELECT, SETMEM, SGN, SHARED, SHELL, SIGNAL, SIN, SINGLE, SLEEP, 
+SOUND, SPACE$, SPC, SQR, STATIC, STEP, STICK, STOP, STR$, STRIG, STRING, STRING$, SUB, SWAP, SYSTEM, TAB, TAN, THEN, TIME$, TIMER, 
+TO, TROFF, TRON, TYPE, UBOUND, UCASE$, UEVENT, UNLOCK, UNTIL, USING, VAL, VARPTR, VARPTR$, VARSEG, VIEW, WAIT, WEND, WHILE, WIDTH, 
+WINDOW, WRITE, XOR`;
 
     // Always load example files
     console.log("Loading QBasic example files...");
