@@ -28,9 +28,9 @@ const DOSSimConfig = {
     // OpenRouter API key (register at https://openrouter.ai)
     apiKey: "",
     
-    // OpenRouter API model (default: anthropic/claude-3-haiku)
-    // Other options: anthropic/claude-3-sonnet, openai/gpt-4o, mistral/mixtral-8x7b-instruct, etc.
-    model: "anthropic/claude-3-haiku",
+    // OpenRouter API model (default: anthropic/claude-3.5-sonnet)
+    // Other options: claude-3.5-haiku, claude-3.7-haiku, claude-3.7-sonnet, claude-3-opus, openai/gpt-4o, etc.
+    model: "anthropic/claude-3.5-sonnet",
     
     // Streaming parameters
     streamingDelay: 300 // ms between chunks in mock mode

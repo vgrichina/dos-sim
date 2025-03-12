@@ -38,7 +38,7 @@ class BaseAIClient {
  * Connects to OpenRouter API for code generation
  */
 class OpenRouterClient extends BaseAIClient {
-  constructor(apiKey, model = "anthropic/claude-3-haiku") {
+  constructor(apiKey, model = "anthropic/claude-3.5-sonnet") {
     super();
     this.apiKey = apiKey;
     this.model = model;
@@ -258,7 +258,7 @@ class AIClientFactory {
       // Create OpenRouter client
       const client = new OpenRouterClient(
         config.apiKey, 
-        config.model || "anthropic/claude-3-haiku"
+        config.model || "anthropic/claude-3.5-sonnet"
       );
       return client;
     } else {
