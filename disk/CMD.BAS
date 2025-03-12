@@ -1,4 +1,7 @@
-10 CLS
+10 ' Configuration variables - easy to adjust
+11 POLLDELAY = 150000 * 10 ' Polling delay (10x for QBasic)
+12 ERRDELAY = 300000 * 10 ' Error delay (10x for QBasic)
+15 CLS
 20 PRINT "DOSSim v1.0 - DOS Experience in the Browser"
 30 PRINT "Type DOS commands or generate BASIC apps using [NAME].BAS parameters"
 40 PRINT "Example: MARIO.BAS /no-koopas /play-as-princess"
@@ -68,9 +71,9 @@
 400 ' Polling loop for cmd_in.txt
 405 PRINT "POLLING: Starting loop"
 406 ' Keep track of file position to avoid reading the same content twice
-407 FPOS = 1 ' Start at position 1 (beginning of file)
+407 FILEPOS = 1 ' Start at position 1 (beginning of file)
 408 MAXBUF = 200 ' Maximum buffer size to avoid string overflow errors
-420 FOR I = 1 TO 150000 : NEXT I ' Increased delay to reduce CPU usage
+420 FOR I = 1 TO POLLDELAY : NEXT I ' Using configurable polling delay
 425 PRINT "POLLING: Attempting to open CMD_IN.TXT"
 430 ' Try to open file with proper error handling
 435 ON ERROR GOTO 1000
@@ -79,7 +82,7 @@
 455 LNCNT = 0
 456 HVCNT = 0
 465 PRINT "READING: Starting to read file content"
-467 FOR I = 1 TO FPOS - 1
+467 FOR I = 1 TO FILEPOS - 1
 468   IF EOF(2) THEN EXIT FOR
 469   LINE INPUT #2, SKIP$
 470 NEXT I
@@ -90,7 +93,7 @@
 476   LINE INPUT #2, INDAT$
 480   PRINT "READING: Got line: "; INDAT$
 481   LNCNT = LNCNT + 1
-482   FPOS = FPOS + 1 ' Track position in file
+482   FILEPOS = FILEPOS + 1 ' Track position in file
 483   
 484   ' Process this line immediately instead of buffering
 485   GOSUB 700
@@ -101,7 +104,7 @@
 510 CLOSE #2
 515 ' Don't empty the file - JS keeps appending to it
 520 ' Only need to reset file position if file was manually edited or deleted
-525 IF LNCNT = 0 AND HVCNT = 0 THEN FPOS = 1
+525 IF LNCNT = 0 AND HVCNT = 0 THEN FILEPOS = 1
 530 GOTO 420
 
 599 PRINT "ERROR: Accidental entry to old content processing routine!": END
@@ -148,7 +151,7 @@
 1010 CLOSE ' Close any open files 
 1015 PRINT "ERROR HANDLER: Waiting longer before retry"
 1020 ' Add extra delay to avoid rapid cycling when file not found
-1025 FOR I = 1 TO 300000 : NEXT I ' Much longer delay when file not found
+1025 FOR I = 1 TO ERRDELAY : NEXT I ' Using configurable error delay
 1030 PRINT "ERROR HANDLER: Returning to polling"
 1035 RESUME 420 ' Go back to polling loop
 
