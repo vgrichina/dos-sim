@@ -89,12 +89,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             const text = await response.text();
             const contents = encodeDOSText(text); // Use utility function for DOS text encoding
             
-            // Generate hexdump for BAS files for debugging
-            if (fileInfo.name.endsWith(".BAS")) {
-              console.log(`Hexdump of ${fileInfo.name}:`);
-              console.log(hexdump(contents));
-            }
-            
             return {
               path: fileInfo.name,
               contents
@@ -131,8 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         [autoexec]
         mount c .
         c:
-        REM GWBASIC.EXE CMD.BAS
-        qb cmd.bas
+        qb /run cmd.bas
         
         [cpu]
         cputype pentium_mmx

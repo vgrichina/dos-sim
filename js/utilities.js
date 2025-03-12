@@ -93,3 +93,57 @@ function parseBasicCommand(command) {
     flags
   };
 }
+
+/**
+ * Convert Unix line endings to DOS (CRLF) line endings
+ * 
+ * @param {string} text - Text with any line ending format
+ * @returns {string} - Text with DOS (CRLF) line endings
+ */
+function toDOS(text) {
+  if (!text) return "";
+  
+  // First normalize to Unix line endings in case there's a mix
+  const unixText = text.replace(/\r\n|\r/g, '\n');
+  
+  // Then convert to DOS line endings
+  return unixText.replace(/\n/g, '\r\n');
+}
+
+/**
+ * Convert DOS line endings to Unix line endings and remove DOS-specific control characters
+ * 
+ * @param {string} text - Text with DOS line endings
+ * @returns {string} - Clean text with Unix line endings
+ */
+function fromDOS(text) {
+  if (!text) return "";
+  
+  // Remove DOS EOF character (SUB, Ctrl+Z, ASCII 26)
+  text = text.replace(/\x1A/g, '');
+  
+  // Convert DOS (CRLF) to Unix (LF)
+  return text.replace(/\r\n/g, '\n');
+}
+
+/**
+ * Encode text for DOS with proper line endings
+ * 
+ * @param {string} text - Text to encode
+ * @returns {Uint8Array} - Binary data with DOS line endings
+ */
+function encodeDOSText(text) {
+  return new TextEncoder().encode(toDOS(text));
+}
+
+/**
+ * Decode text from DOS with proper line endings
+ * 
+ * @param {Uint8Array} buffer - Binary data to decode
+ * @returns {string} - Text with normalized line endings
+ */
+function decodeDOSText(buffer) {
+  if (!buffer || buffer.length === 0) return "";
+  return fromDOS(new TextDecoder().decode(buffer));
+}
+
