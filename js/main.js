@@ -64,21 +64,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Define all files by type for consistent handling
     const allFiles = [
+      // Core binary files
       { name: "GWBASIC.EXE", type: "binary" },
       { name: "QB.EXE", type: "binary" },
       { name: "UHEX.COM", type: "binary" },
+      
+      // Core BASIC files
       { name: "CMD.BAS", type: "text" },
       { name: "TEST.BAS", type: "text" },
-      { name: "README.TXT", type: "text" }
+      { name: "README.TXT", type: "text" },
+      
+      // QBasic examples for reference
+      { name: "EXAMPLES/NIBBLES.BAS", type: "text", source: "qbasic-examples/NIBBLES.BAS" },
+      { name: "EXAMPLES/MONEY.BAS", type: "text", source: "qbasic-examples/MONEY.BAS" },
+      { name: "EXAMPLES/GORILLA.BAS", type: "text", source: "qbasic-examples/GORILLA.BAS" },
+      { name: "EXAMPLES/REMLINE.BAS", type: "text", source: "qbasic-examples/REMLINE.BAS" },
+      { name: "EXAMPLES/SORTDEMO.BAS", type: "text", source: "qbasic-examples/SORTDEMO.BAS" }
     ];
     
     // Fetch all files from disk
-    const fetchPromises = allFiles.map(file => 
-      fetch(`disk/${file.name}`).catch(err => {
-        console.warn(`Could not load ${file.name}:`, err);
+    const fetchPromises = allFiles.map(file => {
+      const sourceUrl = file.source ? file.source : `disk/${file.name}`;
+      return fetch(sourceUrl).catch(err => {
+        console.warn(`Could not load ${file.name} from ${sourceUrl}:`, err);
         return null; // Return null for failed requests
-      })
-    );
+      });
+    });
     
     // Fetch all files
     const responses = await Promise.all(fetchPromises);
