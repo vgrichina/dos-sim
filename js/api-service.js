@@ -64,18 +64,20 @@ class OpenRouterClient extends BaseAIClient {
     
     const { filename, options } = this.parsePrompt(prompt);
     
-    const systemPrompt = `You are an expert GW-BASIC programmer in an MS-DOS environment from the early 1990s. 
-Your task is to generate GW-BASIC code that runs on MS-DOS machines with GWBASIC.EXE or QB.EXE.
+    const systemPrompt = `You are an expert QBasic 4.5 programmer in an MS-DOS environment from the mid-1990s. 
+Your task is to generate QBasic code that runs on MS-DOS machines with QB.EXE.
 
-When writing GW-BASIC programs:
+When writing QBasic programs:
 1. Focus on creating functional, well-structured code
-2. Use line numbers in increments of 10
-3. Include comments for key sections
-4. Use proper BASIC syntax and commands
-5. Make the program user-friendly
+2. Use modern QBasic syntax without requiring line numbers
+3. Use SUB and FUNCTION procedures for modular design
+4. Include comments for key sections
+5. Use proper QBasic syntax and commands
+6. Make the program user-friendly with clear UI
+7. Use QBasic 4.5 features like better graphics, mouse support where appropriate
 
-The code should be output with NO markdown formatting or explanation - ONLY output the raw BASIC code.
-Do not use any special instructions or notes, just the BASIC code itself.`;
+The code should be output with NO markdown formatting or explanation - ONLY output the raw QBasic code.
+Do not use any special instructions or notes, just the QBasic code itself.`;
 
     try {
       const response = await fetch(this.apiEndpoint, {
@@ -96,7 +98,7 @@ Do not use any special instructions or notes, just the BASIC code itself.`;
             },
             {
               role: "user",
-              content: `Create a GW-BASIC program named ${filename} with the following options: ${options.join(", ")}`
+              content: `Create a QBasic 4.5 program named ${filename} with the following options: ${options.join(", ")}`
             }
           ],
           max_tokens: 1500,
@@ -181,58 +183,91 @@ class MockAIClient extends BaseAIClient {
     const appName = params.filename;
     const options = params.options;
     
-    // Generate simple BASIC code based on the app name and options
-    chunks.push("10 CLS\n");
-    chunks.push("20 PRINT \"" + appName + " - Generated App\"\n");
-    chunks.push("30 PRINT \"Options: " + options.join(", ") + "\"\n");
+    // Generate QBasic 4.5 code based on the app name and options
+    chunks.push("' " + appName + " - QBasic 4.5 Generated App\n");
+    chunks.push("' Options: " + options.join(", ") + "\n\n");
+    chunks.push("SCREEN 12  ' High resolution graphics mode\n");
+    chunks.push("CLS\n\n");
     
     if (appName.includes("MARIO")) {
-      chunks.push("40 PRINT\n");
-      chunks.push("50 PRINT \"It's-a me, Mario!\"\n");
+      chunks.push("' Main program\n");
+      chunks.push("COLOR 14\n");
+      chunks.push("PRINT \"It's-a me, Mario!\"\n");
       
       if (options.includes("no-koopas")) {
-        chunks.push("60 PRINT \"No Koopas mode activated!\"\n");
+        chunks.push("COLOR 10\n");
+        chunks.push("PRINT \"No Koopas mode activated!\"\n");
       }
       
       if (options.includes("play-as-princess")) {
-        chunks.push("70 PRINT \"Playing as Princess Peach!\"\n");
+        chunks.push("COLOR 13\n");
+        chunks.push("PRINT \"Playing as Princess Peach!\"\n");
       }
       
-      chunks.push("80 PRINT\n");
-      chunks.push("90 INPUT \"Press ENTER to continue...\", A$\n");
-      chunks.push("100 GOTO 10\n");
+      chunks.push("\nCOLOR 7\n");
+      chunks.push("PRINT \"Press any key to continue...\"\n");
+      chunks.push("SLEEP\n");
+      chunks.push("CLS\n");
+      chunks.push("PRINT \"Game would start here...\"\n");
+      chunks.push("PRINT \"Press any key to exit\"\n");
+      chunks.push("SLEEP\n");
+      chunks.push("SYSTEM\n");
     } else if (appName.includes("SNAKE")) {
-      chunks.push("40 PRINT\n");
-      chunks.push("50 PRINT \"SNAKE GAME\"\n");
-      chunks.push("60 PRINT \"Use WASD to move\"\n");
-      chunks.push("70 PRINT \"Collect food (*) to grow\"\n");
-      chunks.push("80 PRINT\n");
-      chunks.push("90 PRINT \"Press ENTER to play...\"\n");
-      chunks.push("100 INPUT A$\n"); 
-      chunks.push("110 PRINT \"Game is simulated. Thanks for playing!\"\n");
-      chunks.push("120 INPUT \"Press ENTER to exit\", A$\n");
-      chunks.push("130 SYSTEM\n");
+      chunks.push("' Snake game variables\n");
+      chunks.push("DIM snakeX(100), snakeY(100) AS INTEGER\n");
+      chunks.push("length = 5  ' Initial snake length\n\n");
+      chunks.push("' Display instructions\n");
+      chunks.push("COLOR 10\n");
+      chunks.push("PRINT \"SNAKE GAME\"\n");
+      chunks.push("COLOR 7\n");
+      chunks.push("PRINT \"Use WASD to move\"\n");
+      chunks.push("PRINT \"Collect food (*) to grow\"\n");
+      chunks.push("PRINT\n");
+      chunks.push("PRINT \"Press any key to play...\"\n");
+      chunks.push("SLEEP\n"); 
+      chunks.push("CLS\n");
+      chunks.push("PRINT \"Game is simulated. Thanks for playing!\"\n");
+      chunks.push("PRINT \"Press any key to exit\"\n");
+      chunks.push("SLEEP\n");
+      chunks.push("SYSTEM\n");
     } else if (appName.includes("CALC")) {
-      chunks.push("40 PRINT\n");
-      chunks.push("50 PRINT \"BASIC Calculator\"\n");
-      chunks.push("60 PRINT \"---------------\"\n");
-      chunks.push("70 INPUT \"Enter first number: \", A\n");
-      chunks.push("80 INPUT \"Enter second number: \", B\n");
-      chunks.push("90 PRINT\n");
-      chunks.push("100 PRINT \"Results:\"\n");
-      chunks.push("110 PRINT A; \" + \"; B; \" = \"; A+B\n");
-      chunks.push("120 PRINT A; \" - \"; B; \" = \"; A-B\n");
-      chunks.push("130 PRINT A; \" * \"; B; \" = \"; A*B\n");
-      chunks.push("140 IF B <> 0 THEN PRINT A; \" / \"; B; \" = \"; A/B ELSE PRINT \"Division by zero!\"\n");
-      chunks.push("150 PRINT\n");
-      chunks.push("160 INPUT \"Press ENTER to exit\", X$\n");
-      chunks.push("170 SYSTEM\n");
+      chunks.push("' Calculator functions\n");
+      chunks.push("FUNCTION Add(a, b)\n");
+      chunks.push("  Add = a + b\n");
+      chunks.push("END FUNCTION\n\n");
+      chunks.push("FUNCTION Subtract(a, b)\n");
+      chunks.push("  Subtract = a - b\n");
+      chunks.push("END FUNCTION\n\n");
+      chunks.push("' Main program\n");
+      chunks.push("COLOR 11\n");
+      chunks.push("PRINT \"QBasic Calculator\"\n");
+      chunks.push("PRINT \"---------------\"\n");
+      chunks.push("COLOR 7\n");
+      chunks.push("INPUT \"Enter first number: \", a\n");
+      chunks.push("INPUT \"Enter second number: \", b\n");
+      chunks.push("PRINT\n");
+      chunks.push("PRINT \"Results:\"\n");
+      chunks.push("PRINT a; \" + \"; b; \" = \"; Add(a, b)\n");
+      chunks.push("PRINT a; \" - \"; b; \" = \"; Subtract(a, b)\n");
+      chunks.push("PRINT a; \" * \"; b; \" = \"; a * b\n");
+      chunks.push("IF b <> 0 THEN\n");
+      chunks.push("  PRINT a; \" / \"; b; \" = \"; a / b\n");
+      chunks.push("ELSE\n");
+      chunks.push("  PRINT \"Division by zero!\"\n");
+      chunks.push("END IF\n");
+      chunks.push("PRINT\n");
+      chunks.push("PRINT \"Press any key to exit\"\n");
+      chunks.push("SLEEP\n");
+      chunks.push("SYSTEM\n");
     } else {
-      chunks.push("40 PRINT\n");
-      chunks.push("50 PRINT \"This is a simple " + appName + " app\"\n");
-      chunks.push("60 PRINT\n");
-      chunks.push("70 INPUT \"Press ENTER to exit...\", A$\n");
-      chunks.push("80 SYSTEM\n");
+      chunks.push("' Main program\n");
+      chunks.push("COLOR 14\n");
+      chunks.push("PRINT \"This is a simple " + appName + " app\"\n");
+      chunks.push("COLOR 7\n");
+      chunks.push("PRINT\n");
+      chunks.push("PRINT \"Press any key to exit...\"\n");
+      chunks.push("SLEEP\n");
+      chunks.push("SYSTEM\n");
     }
     
     // Return an async generator to simulate streaming

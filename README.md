@@ -19,7 +19,8 @@ DOSSim is a browser-based platform where users can run standard DOS commands and
 ## Technologies Used
 
 - **js-dos**: Emulation of DOS in the browser
-- **GW-BASIC**: Programming language used for the custom CMD interpreter and generated programs
+- **QBasic 4.5**: Programming language used for generated programs
+- **GW-BASIC**: Used for the custom CMD interpreter
 - **Async Generators**: Streaming the AI-generated code in real-time
 
 ## Local Development
@@ -27,7 +28,14 @@ DOSSim is a browser-based platform where users can run standard DOS commands and
 1. Clone the repository
 2. Open `index.html` in a web browser
 
-Note: The current implementation uses a mock AI client. To integrate with a real AI API, modify the `MockAIClient` class with your preferred API implementation.
+To use the AI code generation feature:
+1. Click on the "AI Settings" panel below the DOS window
+2. Enable AI with the toggle switch
+3. Enter your OpenRouter API key (get one at https://openrouter.ai)
+4. Select your preferred model
+5. Save settings
+
+You can also run in debug mode which will use a mock implementation instead of making real API calls.
 
 ## License
 
