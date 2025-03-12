@@ -25,11 +25,12 @@ const DOSSimConfig = {
     // Set to true to use a real AI service instead of mock
     useRealAi: false,
     
-    // API endpoint (only used if useRealAi is true)
-    apiEndpoint: "https://api.example.com/generate",
-    
-    // API key (only used if useRealAi is true)
+    // OpenRouter API key (register at https://openrouter.ai)
     apiKey: "",
+    
+    // OpenRouter API model (default: anthropic/claude-3-haiku)
+    // Other options: anthropic/claude-3-sonnet, openai/gpt-4o, mistral/mixtral-8x7b-instruct, etc.
+    model: "anthropic/claude-3-haiku",
     
     // Streaming parameters
     streamingDelay: 300 // ms between chunks in mock mode

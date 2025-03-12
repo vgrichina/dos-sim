@@ -34,59 +34,132 @@ class BaseAIClient {
 }
 
 /**
- * Real AI Client for production use
- * Connects to an actual AI API for code generation
+ * OpenRouter AI Client for production use
+ * Connects to OpenRouter API for code generation
  */
-class RealAIClient extends BaseAIClient {
-  constructor(apiEndpoint, apiKey) {
+class OpenRouterClient extends BaseAIClient {
+  constructor(apiKey, model = "anthropic/claude-3-haiku") {
     super();
-    this.apiEndpoint = apiEndpoint;
     this.apiKey = apiKey;
+    this.model = model;
+    this.apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+    // Enable debug mode by default to false
+    this.debugEnabled = false;
+  }
+  
+  setDebugEnabled(enabled) {
+    this.debugEnabled = enabled;
+    console.log(`Debug mode ${enabled ? 'enabled' : 'disabled'} for OpenRouter client`);
   }
   
   async generateStream(prompt) {
-    console.log("Using real AI API for generation");
-    
-    // This is a placeholder for an actual API implementation
-    // You would need to implement this based on your chosen AI API
-    const response = await fetch(this.apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        prompt: `Generate a GW-BASIC program for: ${prompt}`,
-        stream: true,
-        max_tokens: 1000,
-        temperature: 0.7
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+    if (this.debugEnabled) {
+      console.log("Debug mode enabled - using mock implementation");
+      // Use mock implementation for debugging
+      const mockClient = new MockAIClient(300);
+      return mockClient.generateStream(prompt);
     }
     
-    // Parse the streaming response
-    // This would need to be customized based on the specific API's streaming format
-    const reader = response.body.getReader();
+    console.log(`Using OpenRouter API (${this.model}) for generation`);
     
-    return (async function* () {
-      let accumulatedCode = "";
+    const { filename, options } = this.parsePrompt(prompt);
+    
+    const systemPrompt = `You are an expert GW-BASIC programmer in an MS-DOS environment from the early 1990s. 
+Your task is to generate GW-BASIC code that runs on MS-DOS machines with GWBASIC.EXE or QB.EXE.
+
+When writing GW-BASIC programs:
+1. Focus on creating functional, well-structured code
+2. Use line numbers in increments of 10
+3. Include comments for key sections
+4. Use proper BASIC syntax and commands
+5. Make the program user-friendly
+
+The code should be output with NO markdown formatting or explanation - ONLY output the raw BASIC code.
+Do not use any special instructions or notes, just the BASIC code itself.`;
+
+    try {
+      const response = await fetch(this.apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+          'HTTP-Referer': 'https://dossim.app',
+          'X-Title': 'DOSSim BASIC Generator'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          stream: true,
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt
+            },
+            {
+              role: "user",
+              content: `Create a GW-BASIC program named ${filename} with the following options: ${options.join(", ")}`
+            }
+          ],
+          max_tokens: 1500,
+          temperature: 0.7
+        })
+      });
       
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        // Convert the chunk to text and process it
-        const chunk = new TextDecoder().decode(value);
-        // This is just a placeholder - you'd need to parse the chunk based on the API format
-        const codeChunk = chunk; // In a real implementation, extract the code from the chunk
-        
-        accumulatedCode += codeChunk;
-        yield accumulatedCode;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API request failed: ${response.status} - ${errorText}`);
       }
-    })();
+      
+      // Parse the streaming response from OpenRouter
+      const reader = response.body.getReader();
+      
+      return (async function* () {
+        let accumulatedCode = "";
+        const decoder = new TextDecoder();
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          // Convert the chunk to text and parse as JSON
+          const chunk = decoder.decode(value);
+          
+          // Process each line separately (OpenRouter sends multiple JSON objects)
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+          
+          for (const line of lines) {
+            try {
+              // Skip "data: [DONE]" message
+              if (line === 'data: [DONE]') continue;
+              
+              // Remove "data: " prefix if present
+              const jsonStr = line.startsWith('data: ') ? line.substring(6) : line;
+              const data = JSON.parse(jsonStr);
+              
+              // Extract content from the delta or choices
+              let content = '';
+              if (data.choices && data.choices.length > 0) {
+                if (data.choices[0].delta && data.choices[0].delta.content) {
+                  content = data.choices[0].delta.content;
+                } else if (data.choices[0].message && data.choices[0].message.content) {
+                  content = data.choices[0].message.content;
+                }
+              }
+              
+              if (content) {
+                accumulatedCode += content;
+                yield accumulatedCode;
+              }
+            } catch (error) {
+              console.warn("Error parsing JSON from stream:", error, "Line:", line);
+              // Continue with the next line
+            }
+          }
+        }
+      })();
+    } catch (error) {
+      console.error("Error generating with OpenRouter:", error);
+      throw error;
+    }
   }
 }
 
@@ -182,9 +255,29 @@ class MockAIClient extends BaseAIClient {
 class AIClientFactory {
   static createClient(config) {
     if (config.useRealAi) {
-      return new RealAIClient(config.apiEndpoint, config.apiKey);
+      // Create OpenRouter client
+      const client = new OpenRouterClient(
+        config.apiKey, 
+        config.model || "anthropic/claude-3-haiku"
+      );
+      return client;
     } else {
       return new MockAIClient(config.streamingDelay);
     }
   }
 }
+
+// Global function to toggle debug mode
+window.setAIDebugEnabled = function(enabled = true) {
+  const config = DOSSimConfig.ai;
+  const client = AIClientFactory.createClient(config);
+  
+  if (client instanceof OpenRouterClient) {
+    client.setDebugEnabled(enabled);
+    console.log(`AI debug mode ${enabled ? 'enabled' : 'disabled'}`);
+    return true;
+  } else {
+    console.log("Debug mode can only be set when using the OpenRouter client");
+    return false;
+  }
+};

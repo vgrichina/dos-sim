@@ -49,10 +49,16 @@ async function cleanupDosBox() {
 
 // Initialize js-dos when DOM is ready
 document.addEventListener("DOMContentLoaded", async () => {
+  // Load settings before initializing (settings.js handles this)
+  
+  // Create AI client with current config
   const aiClient = AIClientFactory.createClient(DOSSimConfig.ai);
   
   try {
-    console.log("Initializing js-dos...");
+    console.log("Initializing js-dos with config:", {
+      useRealAi: DOSSimConfig.ai.useRealAi,
+      model: DOSSimConfig.ai.model
+    });
     // Fetch the required files
     console.log("Fetching required files...");
     
@@ -329,12 +335,15 @@ async function appendToCmdIn(content) {
 // Handle generate command
 async function handleGenerateRequest(prompt) {
   try {
-    // Get the AI client using the factory
+    // Always get a fresh AI client to ensure we're using the latest config
     const aiClient = AIClientFactory.createClient(DOSSimConfig.ai);
     
     // Prompt should already be cleaned, just trim
     const cleanPrompt = prompt.trim();
-    console.log("Generating code for prompt:", cleanPrompt);
+    console.log("Generating code for prompt:", cleanPrompt, "with config:", {
+      useRealAi: DOSSimConfig.ai.useRealAi,
+      model: DOSSimConfig.ai.model
+    });
     
     // Extract the filename from the prompt (first word)
     const filename = cleanPrompt.split(/\s+/)[0];
