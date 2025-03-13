@@ -70,7 +70,7 @@ class OpenRouterClient extends BaseAIClient {
     // Load example QBasic files if requested
     const loadExampleFile = async (filename) => {
       try {
-        const response = await fetch(`qbasic-examples/${filename}`);
+        const response = await fetch(`examples/${filename}`);
         if (!response.ok) {
           console.error(`Failed to load example file ${filename}: ${response.status}`);
           return null;
@@ -122,15 +122,11 @@ WINDOW, WRITE, XOR`;
     console.log("Loading QBasic example files...");
     const exampleFiles = ["SORTDEMO.BAS", "TORUS.BAS", "PLOTTER.BAS", "CAL.BAS"];
     
-    // Try to load examples from both directories
+    // Load examples from the consolidated directory
     const examplePromises = exampleFiles.map(file => {
       return loadExampleFile(file).catch(() => {
-        // If loading from root fails, try loading from classic-qbasic/EXAMPLES
-        return loadExampleFile(`EXAMPLES/${file}`).catch(() => {
-          // If both fail, return null
-          console.warn(`Failed to load example: ${file}`);
-          return null;
-        });
+        console.warn(`Failed to load example: ${file}`);
+        return null;
       });
     });
     
