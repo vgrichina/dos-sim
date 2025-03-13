@@ -79,12 +79,30 @@ document.addEventListener("DOMContentLoaded", async () => {
       { name: "TEST.BAS", type: "text" },
       { name: "README.TXT", type: "text" },
       
-      // QBasic examples for reference
+      // QBasic examples from qbasic-examples directory
       { name: "EXAMPLES/NIBBLES.BAS", type: "text", source: "qbasic-examples/NIBBLES.BAS" },
       { name: "EXAMPLES/MONEY.BAS", type: "text", source: "qbasic-examples/MONEY.BAS" },
       { name: "EXAMPLES/GORILLA.BAS", type: "text", source: "qbasic-examples/GORILLA.BAS" },
       { name: "EXAMPLES/REMLINE.BAS", type: "text", source: "qbasic-examples/REMLINE.BAS" },
-      { name: "EXAMPLES/SORTDEMO.BAS", type: "text", source: "qbasic-examples/SORTDEMO.BAS" }
+      { name: "EXAMPLES/SORTDEMO.BAS", type: "text", source: "qbasic-examples/SORTDEMO.BAS" },
+      
+      // Additional examples from classic-qbasic directory
+      { name: "CLASSIC/TORUS.BAS", type: "text", source: "classic-qbasic/TORUS.BAS" },
+      { name: "CLASSIC/QCARDS.BAS", type: "text", source: "classic-qbasic/QCARDS.BAS" },
+      { name: "CLASSIC/DEMO1.BAS", type: "text", source: "classic-qbasic/DEMO1.BAS" },
+      { name: "CLASSIC/DEMO2.BAS", type: "text", source: "classic-qbasic/DEMO2.BAS" },
+      { name: "CLASSIC/DEMO3.BAS", type: "text", source: "classic-qbasic/DEMO3.BAS" },
+      
+      // Advanced examples from classic-qbasic/ADVR_EX directory
+      { name: "CLASSIC/ADVR_EX/DRAW_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/DRAW_EX.BAS" },
+      { name: "CLASSIC/ADVR_EX/TYPE_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/TYPE_EX.BAS" },
+      { name: "CLASSIC/ADVR_EX/SHELL_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/SHELL_EX.BAS" },
+      
+      // Additional examples from classic-qbasic/EXAMPLES directory
+      { name: "CLASSIC/EXAMPLES/MANDEL.BAS", type: "text", source: "classic-qbasic/EXAMPLES/MANDEL.BAS" },
+      { name: "CLASSIC/EXAMPLES/CUBE.BAS", type: "text", source: "classic-qbasic/EXAMPLES/CUBE.BAS" },
+      { name: "CLASSIC/EXAMPLES/SINEWAVE.BAS", type: "text", source: "classic-qbasic/EXAMPLES/SINEWAVE.BAS" },
+      { name: "CLASSIC/EXAMPLES/COLORS.BAS", type: "text", source: "classic-qbasic/EXAMPLES/COLORS.BAS" }
     ];
     
     // Fetch all files from disk
