@@ -65,9 +65,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Define all files by type for consistent handling
     const allFiles = [
       // Core binary files
-      { name: "GWBASIC.EXE", type: "binary" },
       { name: "QB.EXE", type: "binary" },
       { name: "UHEX.COM", type: "binary" },
+      
+      // QBasic support files
+      { name: "QB.BI", type: "binary" },
+      { name: "QB.LIB", type: "binary" },
+      { name: "QB.PIF", type: "binary" },
+      { name: "QB.QLB", type: "binary" },
       
       // Core BASIC files
       { name: "CMD.BAS", type: "text" },
