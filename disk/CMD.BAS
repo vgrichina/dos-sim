@@ -21,9 +21,7 @@ PRINT
 
 ' Main command loop
 DO
-  PRINT "DEBUG: Before CommandPrompt, QUIT ="; QUIT
   CALL CommandPrompt
-  PRINT "DEBUG: After CommandPrompt, QUIT ="; QUIT
 LOOP UNTIL QUIT
 
 END ' End of main program
@@ -62,9 +60,7 @@ SUB CommandPrompt
   
   IF CMD$ = "EXIT" THEN 
     PRINT "Exiting DOSSim..."
-    PRINT "DEBUG: Setting QUIT flag to 1"
     QUIT = 1
-    PRINT "DEBUG: After setting, QUIT ="; QUIT
     EXIT SUB
   END IF
   
@@ -114,6 +110,7 @@ SUB ExecuteDosCommand(cmd$)
 END SUB
 
 SUB HandleBasicFile(cmd$)
+  SHARED CURFILE$, FILEOPEN
   ' Handle BASIC file generation
   ' First, extract filename from command (first word)
   CMDLEN = LEN(cmd$)
@@ -153,6 +150,7 @@ SUB HandleBasicFile(cmd$)
 END SUB
 
 SUB PollInputFile
+  SHARED POLLDELAY, ERRDELAY
   ' Polling loop for cmd_in.txt
   PRINT "POLLING: Starting loop"
   
@@ -233,6 +231,7 @@ SUB ProcessLine(lineData$, exitFlag)
 END SUB
 
 SUB HandleRunCommand(lineData$, exitFlag)
+  SHARED FILEOPEN
   ' Handle RUN command from input file
   PRINT "PROCESS-FLOW: RUN command detected"
   PRINT
@@ -281,6 +280,7 @@ SUB HandleRunCommand(lineData$, exitFlag)
 END SUB
 
 SUB HandleChunkData(lineData$)
+  SHARED CURFILE$, FILEOPEN
   ' Handle CHUNK data from input file
   PRINT "PROCESS-FLOW: Code chunk detected"
   
