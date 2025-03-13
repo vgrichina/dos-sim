@@ -212,31 +212,37 @@ Do not use any special instructions or notes, just the QBasic code itself.`;
           const lines = chunk.split('\n').filter(line => line.trim() !== '');
           
           for (const line of lines) {
-            try {
-              // Skip "data: [DONE]" message
-              if (line === 'data: [DONE]') continue;
-              
-              // Remove "data: " prefix if present
-              const jsonStr = line.startsWith('data: ') ? line.substring(6) : line;
-              const data = JSON.parse(jsonStr);
-              
-              // Extract content from the delta or choices
-              let content = '';
-              if (data.choices && data.choices.length > 0) {
-                if (data.choices[0].delta && data.choices[0].delta.content) {
-                  content = data.choices[0].delta.content;
-                } else if (data.choices[0].message && data.choices[0].message.content) {
-                  content = data.choices[0].message.content;
+            // Skip "data: [DONE]" message
+            if (line === 'data: [DONE]') continue;
+            
+            // Only try to parse lines that start with "data: "
+            if (line.startsWith('data: ')) {
+              try {
+                // Remove "data: " prefix
+                const jsonStr = line.substring(6);
+                const data = JSON.parse(jsonStr);
+                
+                // Extract content from the delta or choices
+                let content = '';
+                if (data.choices && data.choices.length > 0) {
+                  if (data.choices[0].delta && data.choices[0].delta.content) {
+                    content = data.choices[0].delta.content;
+                  } else if (data.choices[0].message && data.choices[0].message.content) {
+                    content = data.choices[0].message.content;
+                  }
                 }
+                
+                if (content) {
+                  accumulatedCode += content;
+                  yield accumulatedCode;
+                }
+              } catch (error) {
+                console.warn("Error parsing JSON from data: line:", error, "Line:", line);
+                // Continue with the next line
               }
-              
-              if (content) {
-                accumulatedCode += content;
-                yield accumulatedCode;
-              }
-            } catch (error) {
-              console.warn("Error parsing JSON from stream:", error, "Line:", line);
-              // Continue with the next line
+            } else {
+              // Just log non-data lines to console for debugging
+              console.log("Skipping non-data line:", line);
             }
           }
         }
