@@ -80,30 +80,66 @@ document.addEventListener("DOMContentLoaded", async () => {
       { name: "README.TXT", type: "text" },
       
       // All QBasic examples in a flat EXAMPLES directory structure
-      // Examples from qbasic-examples directory
+      // Examples from qbasic-examples directory (only those not in classic-qbasic)
       { name: "EXAMPLES/NIBBLES.BAS", type: "text", source: "qbasic-examples/NIBBLES.BAS" },
       { name: "EXAMPLES/MONEY.BAS", type: "text", source: "qbasic-examples/MONEY.BAS" },
       { name: "EXAMPLES/GORILLA.BAS", type: "text", source: "qbasic-examples/GORILLA.BAS" },
-      { name: "EXAMPLES/REMLINE.BAS", type: "text", source: "qbasic-examples/REMLINE.BAS" },
-      { name: "EXAMPLES/SORTDEMO.BAS", type: "text", source: "qbasic-examples/SORTDEMO.BAS" },
       
-      // Examples from classic-qbasic main directory
+      // Examples from classic-qbasic main directory (preferring these over duplicates)
       { name: "EXAMPLES/TORUS.BAS", type: "text", source: "classic-qbasic/TORUS.BAS" },
       { name: "EXAMPLES/QCARDS.BAS", type: "text", source: "classic-qbasic/QCARDS.BAS" },
       { name: "EXAMPLES/DEMO1.BAS", type: "text", source: "classic-qbasic/DEMO1.BAS" },
       { name: "EXAMPLES/DEMO2.BAS", type: "text", source: "classic-qbasic/DEMO2.BAS" },
       { name: "EXAMPLES/DEMO3.BAS", type: "text", source: "classic-qbasic/DEMO3.BAS" },
+      { name: "EXAMPLES/REMLINE.BAS", type: "text", source: "classic-qbasic/REMLINE.BAS" },
+      { name: "EXAMPLES/SORTDEMO.BAS", type: "text", source: "classic-qbasic/SORTDEMO.BAS" },
       
       // Examples from classic-qbasic/ADVR_EX directory
+      { name: "EXAMPLES/CALL_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/CALL_EX.BAS" },
+      { name: "EXAMPLES/CHR_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/CHR_EX.BAS" },
+      { name: "EXAMPLES/CMD_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/CMD_EX.BAS" },
+      { name: "EXAMPLES/COM1_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/COM1_EX.BAS" },
+      { name: "EXAMPLES/COM2_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/COM2_EX.BAS" },
+      { name: "EXAMPLES/CSR_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/CSR_EX.BAS" },
+      { name: "EXAMPLES/DECL_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/DECL_EX.BAS" },
+      { name: "EXAMPLES/DEFFN_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/DEFFN_EX.BAS" },
+      { name: "EXAMPLES/DEFSG_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/DEFSG_EX.BAS" },
       { name: "EXAMPLES/DRAW_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/DRAW_EX.BAS" },
-      { name: "EXAMPLES/TYPE_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/TYPE_EX.BAS" },
+      { name: "EXAMPLES/FUNC_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/FUNC_EX.BAS" },
+      { name: "EXAMPLES/OUT_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/OUT_EX.BAS" },
+      { name: "EXAMPLES/SHARE_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/SHARE_EX.BAS" },
       { name: "EXAMPLES/SHELL_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/SHELL_EX.BAS" },
+      { name: "EXAMPLES/STAT_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/STAT_EX.BAS" },
+      { name: "EXAMPLES/SUB_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/SUB_EX.BAS" },
+      { name: "EXAMPLES/TYPE_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/TYPE_EX.BAS" },
+      { name: "EXAMPLES/UBO_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/UBO_EX.BAS" },
+      { name: "EXAMPLES/UCASE_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/UCASE_EX.BAS" },
+      { name: "EXAMPLES/WINDO_EX.BAS", type: "text", source: "classic-qbasic/ADVR_EX/WINDO_EX.BAS" },
       
       // Examples from classic-qbasic/EXAMPLES directory
-      { name: "EXAMPLES/MANDEL.BAS", type: "text", source: "classic-qbasic/EXAMPLES/MANDEL.BAS" },
+      { name: "EXAMPLES/BALLPSET.BAS", type: "text", source: "classic-qbasic/EXAMPLES/BALLPSET.BAS" },
+      { name: "EXAMPLES/BALLXOR.BAS", type: "text", source: "classic-qbasic/EXAMPLES/BALLXOR.BAS" },
+      { name: "EXAMPLES/BAR.BAS", type: "text", source: "classic-qbasic/EXAMPLES/BAR.BAS" },
+      { name: "EXAMPLES/CAL.BAS", type: "text", source: "classic-qbasic/EXAMPLES/CAL.BAS" },
+      { name: "EXAMPLES/CHECK.BAS", type: "text", source: "classic-qbasic/EXAMPLES/CHECK.BAS" },
+      { name: "EXAMPLES/COLORS.BAS", type: "text", source: "classic-qbasic/EXAMPLES/COLORS.BAS" },
+      { name: "EXAMPLES/CRLF.BAS", type: "text", source: "classic-qbasic/EXAMPLES/CRLF.BAS" },
       { name: "EXAMPLES/CUBE.BAS", type: "text", source: "classic-qbasic/EXAMPLES/CUBE.BAS" },
+      { name: "EXAMPLES/EDPAT.BAS", type: "text", source: "classic-qbasic/EXAMPLES/EDPAT.BAS" },
+      { name: "EXAMPLES/ENTAB.BAS", type: "text", source: "classic-qbasic/EXAMPLES/ENTAB.BAS" },
+      { name: "EXAMPLES/FILERR.BAS", type: "text", source: "classic-qbasic/EXAMPLES/FILERR.BAS" },
+      { name: "EXAMPLES/FLPT.BAS", type: "text", source: "classic-qbasic/EXAMPLES/FLPT.BAS" },
+      { name: "EXAMPLES/INDEX.BAS", type: "text", source: "classic-qbasic/EXAMPLES/INDEX.BAS" },
+      { name: "EXAMPLES/MANDEL.BAS", type: "text", source: "classic-qbasic/EXAMPLES/MANDEL.BAS" },
+      { name: "EXAMPLES/PALETTE.BAS", type: "text", source: "classic-qbasic/EXAMPLES/PALETTE.BAS" },
+      { name: "EXAMPLES/PLOTTER.BAS", type: "text", source: "classic-qbasic/EXAMPLES/PLOTTER.BAS" },
+      { name: "EXAMPLES/QLBDUMP.BAS", type: "text", source: "classic-qbasic/EXAMPLES/QLBDUMP.BAS" },
+      { name: "EXAMPLES/SEARCH.BAS", type: "text", source: "classic-qbasic/EXAMPLES/SEARCH.BAS" },
       { name: "EXAMPLES/SINEWAVE.BAS", type: "text", source: "classic-qbasic/EXAMPLES/SINEWAVE.BAS" },
-      { name: "EXAMPLES/COLORS.BAS", type: "text", source: "classic-qbasic/EXAMPLES/COLORS.BAS" }
+      { name: "EXAMPLES/STRTONUM.BAS", type: "text", source: "classic-qbasic/EXAMPLES/STRTONUM.BAS" },
+      { name: "EXAMPLES/TERMINAL.BAS", type: "text", source: "classic-qbasic/EXAMPLES/TERMINAL.BAS" },
+      { name: "EXAMPLES/TOKEN.BAS", type: "text", source: "classic-qbasic/EXAMPLES/TOKEN.BAS" },
+      { name: "EXAMPLES/WHEREIS.BAS", type: "text", source: "classic-qbasic/EXAMPLES/WHEREIS.BAS" }
     ];
     
     // Fetch all files from disk
