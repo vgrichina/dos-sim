@@ -2,8 +2,8 @@
 ' Modern structured version of CMD.BAS
 
 ' Configuration variables - easy to adjust
-POLLDELAY = 150000 * 10 ' Polling delay (10x for QBasic)
-ERRDELAY = 300000 * 10 ' Error delay for QBasic
+POLLDELAY = 1500000  ' Polling delay 
+ERRDELAY = 3000000   ' Error delay
 
 ' Global variables
 CURFILE$ = ""        ' Current file being generated
@@ -351,7 +351,7 @@ FileNotFound:
   FOR I = 1 TO ERRDELAY : NEXT I ' Using configurable error delay
   
   PRINT "ERROR HANDLER: Returning to polling"
-  RESUME NEXT
+  RESUME
 
 ReadingError:
   ' Error handler for reading errors
