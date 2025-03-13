@@ -120,7 +120,7 @@ WINDOW, WRITE, XOR`;
 
     // Always load example files
     console.log("Loading QBasic example files...");
-    const exampleFiles = ["NIBBLES.BAS", "MONEY.BAS"];
+    const exampleFiles = ["SORTDEMO.BAS"];
     const exampleContents = await Promise.all(exampleFiles.map(file => loadExampleFile(file)));
     
     // Filter out any files that failed to load
@@ -128,20 +128,16 @@ WINDOW, WRITE, XOR`;
     const loadedContents = exampleContents.filter(content => content !== null);
     
     if (loadedExamples.length > 0) {
-      systemPromptText += `\n\nHere are some examples of well-structured QBasic programs to learn from:\n`;
+      systemPromptText += `\n\nHere's an example of a well-structured QBasic program:\n`;
       
       for (let i = 0; i < loadedExamples.length; i++) {
-        const description = loadedExamples[i] === "NIBBLES.BAS" ? 
-          "A snake game implemented in QBasic" : 
-          "A personal finance manager in QBasic";
-          
-        systemPromptText += `\nExample ${i+1}: ${loadedExamples[i]} - ${description}
+        systemPromptText += `\nExample: ${loadedExamples[i]}
 \`\`\`qbasic
 ${loadedContents[i]}
 \`\`\`\n`;
       }
       
-      systemPromptText += `\nUse these as references for QBasic coding style, structure and techniques. Your task is to create a new, original program based on the user's request, not to modify these examples.`;
+      systemPromptText += `\nUse this as a reference for QBasic coding style, structure and techniques. Your task is to create a new, original program based on the user's request, not to modify this example.`;
     }
 
     // Add the final instruction
