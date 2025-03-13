@@ -21,7 +21,9 @@ PRINT
 
 ' Main command loop
 DO
+  PRINT "DEBUG: Before CommandPrompt, QUIT ="; QUIT
   CALL CommandPrompt
+  PRINT "DEBUG: After CommandPrompt, QUIT ="; QUIT
 LOOP UNTIL QUIT
 
 END ' End of main program
@@ -29,6 +31,7 @@ END ' End of main program
 ' *** MAIN SUBROUTINES ***
 
 SUB CommandPrompt
+  SHARED QUIT
   ' Display command prompt and get user input
   PRINT "C:\>";
   PRINT "CMD-READ: Waiting for command input..."
@@ -59,7 +62,9 @@ SUB CommandPrompt
   
   IF CMD$ = "EXIT" THEN 
     PRINT "Exiting DOSSim..."
+    PRINT "DEBUG: Setting QUIT flag to 1"
     QUIT = 1
+    PRINT "DEBUG: After setting, QUIT ="; QUIT
     EXIT SUB
   END IF
   
