@@ -118,17 +118,37 @@ SOUND, SPACE$, SPC, SQR, STATIC, STEP, STICK, STOP, STR$, STRIG, STRING, STRING$
 TO, TROFF, TRON, TYPE, UBOUND, UCASE$, UEVENT, UNLOCK, UNTIL, USING, VAL, VARPTR, VARPTR$, VARSEG, VIEW, WAIT, WEND, WHILE, WIDTH, 
 WINDOW, WRITE, XOR`;
 
-    // Always load example files
+    // Load selected example files
     console.log("Loading QBasic example files...");
-    const exampleFiles = ["SORTDEMO.BAS"];
-    const exampleContents = await Promise.all(exampleFiles.map(file => loadExampleFile(file)));
+    const exampleFiles = ["SORTDEMO.BAS", "TORUS.BAS", "PLOTTER.BAS", "CAL.BAS"];
+    
+    // Try to load examples from both directories
+    const examplePromises = exampleFiles.map(file => {
+      return loadExampleFile(file).catch(() => {
+        // If loading from root fails, try loading from classic-qbasic/EXAMPLES
+        return loadExampleFile(`EXAMPLES/${file}`).catch(() => {
+          // If both fail, return null
+          console.warn(`Failed to load example: ${file}`);
+          return null;
+        });
+      });
+    });
+    
+    const exampleContents = await Promise.all(examplePromises);
     
     // Filter out any files that failed to load
-    const loadedExamples = exampleFiles.filter((_, index) => exampleContents[index] !== null);
-    const loadedContents = exampleContents.filter(content => content !== null);
+    const loadedExamples = [];
+    const loadedContents = [];
+    
+    for (let i = 0; i < exampleFiles.length; i++) {
+      if (exampleContents[i]) {
+        loadedExamples.push(exampleFiles[i]);
+        loadedContents.push(exampleContents[i]);
+      }
+    }
     
     if (loadedExamples.length > 0) {
-      systemPromptText += `\n\nHere's an example of a well-structured QBasic program:\n`;
+      systemPromptText += `\n\nHere are examples of well-structured QBasic programs:\n`;
       
       for (let i = 0; i < loadedExamples.length; i++) {
         systemPromptText += `\nExample: ${loadedExamples[i]}
@@ -137,7 +157,7 @@ ${loadedContents[i]}
 \`\`\`\n`;
       }
       
-      systemPromptText += `\nUse this as a reference for QBasic coding style, structure and techniques. Your task is to create a new, original program based on the user's request, not to modify this example.`;
+      systemPromptText += `\nUse these as references for QBasic coding style, structure and techniques. Your task is to create a new, original program based on the user's request, not to modify these examples.`;
     }
 
     // Add the final instruction
