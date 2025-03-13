@@ -71,15 +71,6 @@ SUB CommandPrompt
   ELSE
     CALL ExecuteDosCommand(CMD$)
   END IF
-  
-  EXIT SUB
-  
-UppercaseError:
-  ' Error handler for uppercase conversion
-  E = ERR : L = ERL
-  PRINT "UPPERCASE-ERROR: Error"; E; "at line"; L
-  PRINT "UPPERCASE-ERROR: Continuing without uppercase conversion"
-  RESUME NEXT
 END SUB
 
 SUB ConvertUppercase(cmd$)
@@ -115,23 +106,6 @@ SUB ExecuteDosCommand(cmd$)
   SHELL cmd$
   ON ERROR GOTO 0
   PRINT "DOS-EXEC: Command executed successfully"
-  EXIT SUB
-  
-ShellError:
-  ' Error handler for SHELL command
-  A = ERR : B = ERL
-  PRINT "DOS-ERROR: Error"; A; "at line"; B; "while executing '"; cmd$; "'"
-  
-  ' Display specific error messages based on error code
-  IF A = 53 THEN PRINT "DOS-ERROR: File not found"
-  IF A = 52 THEN PRINT "DOS-ERROR: Bad filename or number"
-  IF A = 71 THEN PRINT "DOS-ERROR: Disk not ready"
-  IF A = 76 THEN PRINT "DOS-ERROR: Path not found"
-  IF A = 5 THEN PRINT "DOS-ERROR: Illegal function call"
-  IF A = 2 THEN PRINT "DOS-ERROR: Syntax error"
-  
-  PRINT "DOS-ERROR: Returning to command prompt"
-  RESUME NEXT
 END SUB
 
 SUB HandleBasicFile(cmd$)
@@ -171,16 +145,6 @@ SUB HandleBasicFile(cmd$)
   
   ' Start polling loop
   CALL PollInputFile
-  
-  EXIT SUB
-  
-GenCommandError:
-  ' Error handler for generation command
-  E = ERR : L = ERL
-  PRINT "GEN-CMD-ERROR: Error"; E; "at line"; L
-  PRINT "GEN-CMD-ERROR: Unable to send generation command"
-  CLOSE
-  RESUME NEXT
 END SUB
 
 SUB PollInputFile
@@ -244,38 +208,6 @@ SUB PollInputFile
     
     ON ERROR GOTO 0
   LOOP
-  
-  EXIT SUB
-  
-FileNotFound:
-  ' Error handler for file not found
-  A = ERR : B = ERL
-  PRINT "ERROR HANDLER: Error"; A; "at line"; B
-  CLOSE ' Close any open files 
-  PRINT "ERROR HANDLER: Waiting longer before retry"
-  
-  ' Add extra delay to avoid rapid cycling when file not found
-  FOR I = 1 TO ERRDELAY : NEXT I ' Using configurable error delay
-  
-  PRINT "ERROR HANDLER: Returning to polling"
-  RESUME NEXT
-
-ReadingError:
-  ' Error handler for reading errors
-  E = ERR : L = ERL
-  PRINT "ERROR HANDLER: Error"; E; "at line"; L
-  
-  IF E = 15 THEN ' String overflow error
-    PRINT "ERROR HANDLER: String overflow detected"
-    CLOSE ' Close any open files
-    PRINT "ERROR HANDLER: Continuing with processing"
-    RESUME NEXT
-  ELSE
-    ' For any other error, close files and continue polling
-    PRINT "ERROR HANDLER: Unexpected error"
-    CLOSE
-    RESUME NEXT
-  END IF
 END SUB
 
 SUB ProcessLine(lineData$, exitFlag)
@@ -341,18 +273,6 @@ SUB HandleRunCommand(lineData$, exitFlag)
   
   ' Set flag to exit polling loop
   exitFlag = 1
-  
-  EXIT SUB
-  
-RunError:
-  ' Error handler for QB run command
-  E = ERR : L = ERL
-  PRINT "SHELL ERROR: Error"; E; "at line"; L
-  PRINT "SHELL ERROR: Problem running QB with file"; CLNF$
-  PRINT "SHELL ERROR: Command was:"; RUNQB$
-  CLOSE
-  exitFlag = 1 ' Still return to command prompt
-  RESUME NEXT
 END SUB
 
 SUB HandleChunkData(lineData$)
@@ -379,9 +299,82 @@ SUB HandleChunkData(lineData$)
     PRINT #3, CHUNK$
     ON ERROR GOTO 0
   END IF
+END SUB
+
+' *** ERROR HANDLERS - DO NOT CALL DIRECTLY ***
+' These are only reachable through ON ERROR GOTO statements
+
+UppercaseError:
+  ' Error handler for uppercase conversion
+  E = ERR : L = ERL
+  PRINT "UPPERCASE-ERROR: Error"; E; "at line"; L
+  PRINT "UPPERCASE-ERROR: Continuing without uppercase conversion"
+  RESUME NEXT
+
+ShellError:
+  ' Error handler for SHELL command
+  A = ERR : B = ERL
+  PRINT "DOS-ERROR: Error"; A; "at line"; B; "while executing '"; cmd$; "'"
   
-  EXIT SUB
+  ' Display specific error messages based on error code
+  IF A = 53 THEN PRINT "DOS-ERROR: File not found"
+  IF A = 52 THEN PRINT "DOS-ERROR: Bad filename or number"
+  IF A = 71 THEN PRINT "DOS-ERROR: Disk not ready"
+  IF A = 76 THEN PRINT "DOS-ERROR: Path not found"
+  IF A = 5 THEN PRINT "DOS-ERROR: Illegal function call"
+  IF A = 2 THEN PRINT "DOS-ERROR: Syntax error"
   
+  PRINT "DOS-ERROR: Returning to command prompt"
+  RESUME NEXT
+
+GenCommandError:
+  ' Error handler for generation command
+  E = ERR : L = ERL
+  PRINT "GEN-CMD-ERROR: Error"; E; "at line"; L
+  PRINT "GEN-CMD-ERROR: Unable to send generation command"
+  CLOSE
+  RESUME NEXT
+
+FileNotFound:
+  ' Error handler for file not found
+  A = ERR : B = ERL
+  PRINT "ERROR HANDLER: Error"; A; "at line"; B
+  CLOSE ' Close any open files 
+  PRINT "ERROR HANDLER: Waiting longer before retry"
+  
+  ' Add extra delay to avoid rapid cycling when file not found
+  FOR I = 1 TO ERRDELAY : NEXT I ' Using configurable error delay
+  
+  PRINT "ERROR HANDLER: Returning to polling"
+  RESUME NEXT
+
+ReadingError:
+  ' Error handler for reading errors
+  E = ERR : L = ERL
+  PRINT "ERROR HANDLER: Error"; E; "at line"; L
+  
+  IF E = 15 THEN ' String overflow error
+    PRINT "ERROR HANDLER: String overflow detected"
+    CLOSE ' Close any open files
+    PRINT "ERROR HANDLER: Continuing with processing"
+    RESUME NEXT
+  ELSE
+    ' For any other error, close files and continue polling
+    PRINT "ERROR HANDLER: Unexpected error"
+    CLOSE
+    RESUME NEXT
+  END IF
+
+RunError:
+  ' Error handler for QB run command
+  E = ERR : L = ERL
+  PRINT "SHELL ERROR: Error"; E; "at line"; L
+  PRINT "SHELL ERROR: Problem running QB with file"; CLNF$
+  PRINT "SHELL ERROR: Command was:"; RUNQB$
+  CLOSE
+  exitFlag = 1 ' Still return to command prompt
+  RESUME NEXT
+
 FileWriteError:
   ' Error handler for file write operations
   E = ERR : L = ERL
@@ -390,4 +383,3 @@ FileWriteError:
   CLOSE #3
   FILEOPEN = 0
   RESUME NEXT
-END SUB
