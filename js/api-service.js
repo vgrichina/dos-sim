@@ -95,6 +95,12 @@ When writing QBasic programs:
 6. Make the program user-friendly with clear UI
 7. Use QBasic 4.5 features like better graphics, mouse support where appropriate
 8. Never use reserved words as identifiers of any kind
+9. Follow QBasic error handling best practices:
+   - Place all error handlers at global scope at the end of the program
+   - NEVER place error handlers inside SUB or FUNCTION procedures
+   - Use ON ERROR GOTO to set the handler
+   - Use ON ERROR GOTO 0 to reset error handling to default
+   - Use RESUME, RESUME NEXT, or RESUME [line] to continue after error
 
 The following is a complete list of Microsoft QBasic reserved words that should NEVER be used for:
 - Variable names (e.g., DIM color AS INTEGER) 
