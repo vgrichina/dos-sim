@@ -255,7 +255,6 @@ async function pollCmdOutput() {
   const pollInterval = setInterval(async () => {
     // Skip this polling cycle if we're already processing a file
     if (isPolling) {
-      console.log("Skipping poll cycle - already processing");
       return;
     }
     
@@ -268,8 +267,6 @@ async function pollCmdOutput() {
         return;
       }
       
-      // Get file tree and search for our file first
-      console.log("Checking file system for CMD_OUT.TXT...");
       try {
         const fileTree = await commandInterface.fsTree();
         
@@ -277,31 +274,26 @@ async function pollCmdOutput() {
         const actualFilename = findFile(fileTree, "CMD_OUT.TXT");
         
         if (!actualFilename) {
-          console.log("CMD_OUT.TXT not found in file system");
           return;
         }
         
-        console.log("Found file in filesystem:", actualFilename);
-        
-        // Now read the file using the correct filename
+        // Read the file using the correct filename
         const outputBuffer = await commandInterface.fsReadFile(actualFilename);
-        console.log("Successfully read file contents!");
         
         // Process the file contents with DOS line ending normalization
         const output = decodeDOSText(outputBuffer);
-        console.log("Received command output:", output);
         
         // Skip empty files
         if (output.trim() === "") {
-          console.log("Skipping empty file content");
           return;
         }
         
+        // Only log when we have non-empty content
+        console.log("Received command output:", output);
+        
         // "Delete" the file by writing empty content to avoid processing it again
         try {
-          console.log("Attempting to clear file:", actualFilename);
           await commandInterface.fsWriteFile(actualFilename, new Uint8Array(0));
-          console.log("Successfully cleared file");
         } catch (writeError) {
           console.warn("Could not clear file:", writeError);
         }
@@ -311,7 +303,7 @@ async function pollCmdOutput() {
         
         return; // Exit the function after processing
       } catch (err) {
-        console.log("Error processing files:", err);
+        console.error("Error processing files:", err);
         return;
       }
       
@@ -376,12 +368,9 @@ async function appendToCmdIn(content) {
     if (actualFilename) {
       try {
         existingContent = await commandInterface.fsReadFile(actualFilename);
-        console.log("Successfully read existing CMD_IN.TXT");
       } catch (readErr) {
         console.warn("Error reading CMD_IN.TXT:", readErr);
       }
-    } else {
-      console.log("CMD_IN.TXT does not exist yet, will create it");
     }
     
     // Decode existing content with proper DOS line ending handling
@@ -395,7 +384,6 @@ async function appendToCmdIn(content) {
     
     // Encode back to DOS format and write to file
     await commandInterface.fsWriteFile("CMD_IN.TXT", encodeDOSText(combinedText));
-    console.log("Successfully appended to CMD_IN.TXT");
   } catch (error) {
     console.error("Error appending to CMD_IN.TXT:", error);
   }
@@ -427,7 +415,6 @@ async function handleGenerateRequest(prompt) {
       // Extract only the new content from this chunk
       if (chunk.length > previousContent.length) {
         const newContent = chunk.substring(previousContent.length);
-        console.log("New content received:", newContent);
         
         // Add new content to the partial line buffer
         partialLine += newContent;
@@ -459,7 +446,8 @@ async function handleGenerateRequest(prompt) {
     
     // Send any remaining content in the buffer if it's not empty
     if (partialLine) {
-      console.log("Sending final partial line:", partialLine);
+      // Keep log for final line too
+      console.log("Sending complete line:", partialLine);
       try {
         await appendToCmdIn("CHUNK: " + partialLine);
       } catch (writeError) {
@@ -476,6 +464,10 @@ async function handleGenerateRequest(prompt) {
     try {
       const runCommand = "RUN: " + filename.trim(); // Note the space after RUN:
       console.log("Sending RUN command to BASIC:", runCommand);
+      
+      // Create a log with all the generated content so far
+      console.log("Complete generated file contents for", filename, ":\n", previousContent);
+      
       await appendToCmdIn(runCommand);
     } catch (error) {
       console.error(`Error sending run command:`, error);
