@@ -67,6 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Core binary files
       { name: "QB.EXE", type: "binary" },
       { name: "UHEX.COM", type: "binary" },
+      { name: "LESS.EXE", type: "binary" },
       
       // QBasic support files
       { name: "QB.BI", type: "binary" },
