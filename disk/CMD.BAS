@@ -233,7 +233,7 @@ SUB HandleChunkData(lineData$)
   CHUNK$ = MID$(lineData$, 7) ' Get content after "CHUNK: "
   
   ' Display the chunk for user feedback
-  PRINT CHUNK$;
+  PRINT CHUNK$
   
   ' Also write to the file if we have an active filename
   IF CURFILE$ <> "" THEN
