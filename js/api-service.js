@@ -173,7 +173,7 @@ Do not use any special instructions or notes, just the QBasic code itself.`;
             },
             {
               role: "user",
-              content: `Create a QBasic 4.5 program named ${filename} with the following options: ${options.join(", ")}`
+              content: `Create a QBasic 4.5 program: ${prompt}`
             }
           ],
           max_tokens: 15000,
