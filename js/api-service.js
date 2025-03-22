@@ -19,21 +19,6 @@ class BaseAIClient {
     throw new Error("Method 'generateStream' must be implemented");
   }
   
-  parsePrompt(prompt) {
-    const parts = prompt.split(" ");
-    const filename = parts[0];
-    
-    // Process options - convert both "/option" and "option" formats to lowercase
-    const options = parts.slice(1).map(opt => {
-      // Strip the leading slash if it exists
-      const cleanOpt = opt.startsWith("/") ? opt.substring(1) : opt;
-      // Convert to lowercase for case-insensitive option handling
-      return cleanOpt.toLowerCase();
-    });
-    
-    console.log(`Parsed prompt: filename=${filename}, options=${options.join(', ')}`);
-    return { filename, options };
-  }
 }
 
 /**
@@ -65,9 +50,10 @@ class OpenRouterClient extends BaseAIClient {
     
     console.log(`Using OpenRouter API (${this.model}) for generation`);
     
-    const { filename, options } = this.parsePrompt(prompt);
+    // Extract filename (first word) for file operations only
+    const filename = prompt.split(/\s+/)[0];
     
-    // Load example QBasic files if requested
+    // Load example QBasic files
     const loadExampleFile = async (filename) => {
       try {
         const response = await fetch(`examples/${filename}`);

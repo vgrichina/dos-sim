@@ -56,43 +56,6 @@ function formatDirListing(files) {
   return result;
 }
 
-/**
- * Parse BASIC command parameters
- * 
- * @param {string} command - The command string
- * @returns {Object} - Object with parsed parameters
- */
-function parseBasicCommand(command) {
-  const parts = command.split(" ");
-  const filename = parts[0];
-  
-  const options = [];
-  const flags = {};
-  
-  for (let i = 1; i < parts.length; i++) {
-    const part = parts[i];
-    
-    if (part.startsWith("/")) {
-      const flag = part.substring(1);
-      
-      // Check if this is a flag with a value
-      if (i + 1 < parts.length && !parts[i + 1].startsWith("/")) {
-        flags[flag] = parts[i + 1];
-        i++; // Skip the next part as it's the value
-      } else {
-        flags[flag] = true;
-      }
-      
-      options.push(flag);
-    }
-  }
-  
-  return {
-    filename,
-    options,
-    flags
-  };
-}
 
 /**
  * Convert Unix line endings to DOS (CRLF) line endings
